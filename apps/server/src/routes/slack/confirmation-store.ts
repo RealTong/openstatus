@@ -1,5 +1,4 @@
 import { redis } from "@/libs/clients";
-import { limitsSchema } from "@openstatus/db/src/schema/plan/schema";
 import { nanoid } from "nanoid";
 import { z } from "zod";
 
@@ -57,7 +56,6 @@ const actionSchema = z.discriminatedUnion("type", [
 const pendingActionSchema = z.object({
   id: z.string(),
   workspaceId: z.number(),
-  limits: limitsSchema,
   botToken: z.string(),
   channelId: z.string(),
   threadTs: z.string(),

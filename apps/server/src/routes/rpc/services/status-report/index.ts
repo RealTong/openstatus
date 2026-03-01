@@ -21,7 +21,6 @@ import {
   statusReportUpdate,
   statusReportsToPageComponents,
 } from "@openstatus/db/src/schema";
-import type { Limits } from "@openstatus/db/src/schema/plan/schema";
 import { EmailClient } from "@openstatus/emails";
 import type { StatusReportService } from "@openstatus/proto/status_report/v1";
 import { StatusReportStatus } from "@openstatus/proto/status_report/v1";
@@ -56,15 +55,9 @@ export async function sendStatusReportNotification(params: {
   status: "investigating" | "identified" | "monitoring" | "resolved";
   message: string;
   date: Date;
-  limits: Limits;
 }) {
-  const { statusReportId, pageId, reportTitle, status, message, date, limits } =
+  const { statusReportId, pageId, reportTitle, status, message, date } =
     params;
-
-  // Check if workspace has status-subscribers feature enabled
-  if (!limits["status-subscribers"]) {
-    return;
-  }
 
   // Get page info
   const pageInfo = await db.query.page.findFirst({
@@ -350,7 +343,6 @@ export const statusReportServiceImpl: ServiceImpl<typeof StatusReportService> =
           status: protoStatusToDb(req.status),
           message: req.message,
           date,
-          limits: rpcCtx.workspace.limits,
         });
       }
 
@@ -588,7 +580,6 @@ export const statusReportServiceImpl: ServiceImpl<typeof StatusReportService> =
           status: protoStatusToDb(req.status),
           message: req.message,
           date,
-          limits: rpcCtx.workspace.limits,
         });
       }
 

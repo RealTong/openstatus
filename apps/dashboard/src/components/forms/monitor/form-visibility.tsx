@@ -9,7 +9,6 @@ import {
   FormCardFooterInfo,
   FormCardHeader,
   FormCardTitle,
-  FormCardUpgrade,
 } from "@/components/forms/form-card";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@openstatus/ui/components/ui/button";
@@ -22,8 +21,6 @@ import {
   FormLabel,
 } from "@openstatus/ui/components/ui/form";
 import { Switch } from "@openstatus/ui/components/ui/switch";
-import { Lock } from "lucide-react";
-import NextLink from "next/link";
 import { useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -36,12 +33,10 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 export function FormVisibility({
-  locked,
   defaultValues,
   onSubmit,
   ...props
 }: Omit<React.ComponentProps<"form">, "onSubmit"> & {
-  locked?: boolean;
   defaultValues?: FormValues;
   onSubmit: (values: FormValues) => Promise<void>;
 }) {
@@ -75,7 +70,6 @@ export function FormVisibility({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(submitAction)} {...props}>
         <FormCard>
-          {locked ? <FormCardUpgrade /> : null}
           <FormCardHeader>
             <FormCardTitle>Visibility</FormCardTitle>
             <FormCardDescription>
@@ -86,7 +80,6 @@ export function FormVisibility({
             <FormField
               control={form.control}
               name="visibility"
-              disabled={locked}
               render={({ field }) => (
                 <FormItem className="flex flex-row items-center justify-between">
                   <div className="space-y-0.5">
@@ -100,7 +93,6 @@ export function FormVisibility({
                     <Switch
                       checked={field.value}
                       onCheckedChange={field.onChange}
-                      disabled={locked}
                     />
                   </FormControl>
                 </FormItem>
@@ -119,18 +111,9 @@ export function FormVisibility({
               </Link>
               .
             </FormCardFooterInfo>
-            {locked ? (
-              <Button asChild>
-                <NextLink href="/settings/billing">
-                  <Lock className="size-4" />
-                  Upgrade
-                </NextLink>
-              </Button>
-            ) : (
-              <Button type="submit" disabled={isPending}>
-                {isPending ? "Submitting..." : "Submit"}
-              </Button>
-            )}
+            <Button type="submit" disabled={isPending}>
+              {isPending ? "Submitting..." : "Submit"}
+            </Button>
           </FormCardFooter>
         </FormCard>
       </form>

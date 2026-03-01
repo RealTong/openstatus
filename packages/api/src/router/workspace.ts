@@ -1,6 +1,5 @@
 import { z } from "zod";
 
-import { Events } from "@openstatus/analytics";
 import { type SQL, and, eq, isNull } from "@openstatus/db";
 import {
   monitor,
@@ -66,7 +65,6 @@ export const workspaceRouter = createTRPCRouter({
   }),
 
   updateName: protectedProcedure
-    .meta({ track: Events.UpdateWorkspace })
     .input(z.object({ name: z.string() }))
     .mutation(async (opts) => {
       const whereConditions: SQL[] = [eq(workspace.id, opts.ctx.workspace.id)];

@@ -14,8 +14,6 @@ import { SlackIntegrationCard } from "./slack-card";
 
 export default function Page() {
   const trpc = useTRPC();
-  //  FIXME: we should use workspace limit here
-  const { data: workspace } = useQuery(trpc.workspace.get.queryOptions());
 
   const { data: integrations } = useQuery(
     trpc.integrationRouter.list.queryOptions(),
@@ -36,7 +34,6 @@ export default function Page() {
         </SectionHeader>
         <FormCardGroup>
           <SlackIntegrationCard
-            locked={!workspace?.limits["slack-agent"]}
             integration={
               slackIntegration
                 ? {

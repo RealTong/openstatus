@@ -15,8 +15,6 @@ import {
   subdomainSafeList,
 } from "@openstatus/db/src/schema";
 
-import { Events } from "@openstatus/analytics";
-import { env } from "../env";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
 if (process.env.NODE_ENV === "test") {
@@ -54,41 +52,12 @@ async function removeDomainFromVercel(domain: string) {
 
 export const pageRouter = createTRPCRouter({
   create: protectedProcedure
-    .meta({ track: Events.CreatePage, trackProps: ["slug"] })
     .input(insertPageSchema)
     .mutation(async (opts) => {
       const { monitors, workspaceId, id, configuration, ...pageProps } =
         opts.input;
 
       const monitorIds = monitors?.map((item) => item.monitorId) || [];
-
-      const pageNumbers = (
-        await opts.ctx.db.query.page.findMany({
-          where: eq(page.workspaceId, opts.ctx.workspace.id),
-        })
-      ).length;
-
-      const limit = opts.ctx.workspace.limits;
-
-      // the user has reached the status page number limits
-      if (pageNumbers >= limit["status-pages"]) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "You reached your status-page limits.",
-        });
-      }
-
-      // the user is not eligible for password protection
-      if (
-        limit["password-protection"] === false &&
-        opts.input.passwordProtected === true
-      ) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message:
-            "Password protection is not available for your current plan.",
-        });
-      }
 
       const newPage = await opts.ctx.db
         .insert(page)
@@ -102,12 +71,11 @@ export const pageRouter = createTRPCRouter({
         .get();
 
       if (monitorIds.length) {
-        // We should make sure the user has access to the monitors AND they are active
         const allMonitors = await opts.ctx.db.query.monitor.findMany({
           where: and(
             inArray(monitor.id, monitorIds),
             eq(monitor.workspaceId, opts.ctx.workspace.id),
-            eq(monitor.active, true), // Only allow active monitors
+            eq(monitor.active, true),
             isNull(monitor.deletedAt),
           ),
         });
@@ -120,10 +88,8 @@ export const pageRouter = createTRPCRouter({
           });
         }
 
-        // Build a map for quick lookup
         const monitorMap = new Map(allMonitors.map((m) => [m.id, m]));
 
-        // Build pageComponent values (primary table)
         const pageComponentValues = monitors
           .map(({ monitorId }, index) => {
             const m = monitorMap.get(monitorId);
@@ -141,7 +107,6 @@ export const pageRouter = createTRPCRouter({
           })
           .filter((v): v is NonNullable<typeof v> => v !== null);
 
-        // Insert into pageComponents (primary table)
         await opts.ctx.db
           .insert(pageComponent)
           .values(pageComponentValues)
@@ -152,7 +117,6 @@ export const pageRouter = createTRPCRouter({
     }),
 
   delete: protectedProcedure
-    .meta({ track: Events.DeletePage })
     .input(z.object({ id: z.number() }))
     .mutation(async (opts) => {
       const whereConditions: SQL[] = [
@@ -169,7 +133,6 @@ export const pageRouter = createTRPCRouter({
   getSlugUniqueness: protectedProcedure
     .input(z.object({ slug: z.string().toLowerCase() }))
     .query(async (opts) => {
-      // had filter on some words we want to keep for us
       if (subdomainSafeList.includes(opts.input.slug)) {
         return false;
       }
@@ -240,9 +203,7 @@ export const pageRouter = createTRPCRouter({
         });
     }),
 
-  // TODO: rename to create
   new: protectedProcedure
-    .meta({ track: Events.CreatePage, trackProps: ["slug"] })
     .input(
       z.object({
         title: z.string(),
@@ -252,22 +213,6 @@ export const pageRouter = createTRPCRouter({
       }),
     )
     .mutation(async (opts) => {
-      const pageNumbers = (
-        await opts.ctx.db.query.page.findMany({
-          where: eq(page.workspaceId, opts.ctx.workspace.id),
-        })
-      ).length;
-
-      const limit = opts.ctx.workspace.limits;
-
-      // the user has reached the status page number limits
-      if (pageNumbers >= limit["status-pages"]) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "You reached your status-page limits.",
-        });
-      }
-
       const result = await opts.ctx.db.query.page.findMany({
         where: sql`lower(${page.slug}) = ${opts.input.slug}`,
       });
@@ -279,7 +224,6 @@ export const pageRouter = createTRPCRouter({
         });
       }
 
-      // REMINDER: default config from legacy page
       const defaultConfiguration = {
         type: "absolute",
         value: "requests",
@@ -297,7 +241,7 @@ export const pageRouter = createTRPCRouter({
           icon: opts.input.icon ?? "",
           legacyPage: false,
           configuration: defaultConfiguration,
-          customDomain: "", // TODO: make nullable
+          customDomain: "",
         })
         .returning()
         .get();
@@ -306,7 +250,6 @@ export const pageRouter = createTRPCRouter({
     }),
 
   updateGeneral: protectedProcedure
-    .meta({ track: Events.UpdatePage })
     .input(
       z.object({
         id: z.number(),
@@ -354,7 +297,6 @@ export const pageRouter = createTRPCRouter({
     }),
 
   updateCustomDomain: protectedProcedure
-    .meta({ track: Events.UpdatePageDomain, trackProps: ["customDomain"] })
     .input(z.object({ id: z.number(), customDomain: z.string().toLowerCase() }))
     .mutation(async (opts) => {
       const whereConditions: SQL[] = [
@@ -384,64 +326,14 @@ export const pageRouter = createTRPCRouter({
       const oldDomain = currentPage.customDomain;
       const newDomain = opts.input.customDomain;
 
-      try {
-        // Handle domain changes
-        if (newDomain && !oldDomain) {
-          // Adding a new domain
-          await opts.ctx.db
-            .update(page)
-            .set({ customDomain: newDomain, updatedAt: new Date() })
-            .where(and(...whereConditions))
-            .run();
-
-          // Add domain to Vercel using the domain router logic
-          await addDomainToVercel(newDomain);
-        } else if (oldDomain && newDomain !== oldDomain) {
-          // Changing domain - remove old and add new
-          await opts.ctx.db
-            .update(page)
-            .set({ customDomain: newDomain, updatedAt: new Date() })
-            .where(and(...whereConditions))
-            .run();
-
-          // Remove old domain from Vercel
-          await removeDomainFromVercel(oldDomain);
-
-          // Add new domain to Vercel
-          if (newDomain) {
-            await addDomainToVercel(newDomain);
-          }
-        } else if (oldDomain && newDomain === "") {
-          // Removing domain
-          await opts.ctx.db
-            .update(page)
-            .set({ customDomain: "", updatedAt: new Date() })
-            .where(and(...whereConditions))
-            .run();
-
-          // Remove domain from Vercel
-          await removeDomainFromVercel(oldDomain);
-        } else {
-          // No change needed, just update the database
-          await opts.ctx.db
-            .update(page)
-            .set({ customDomain: newDomain, updatedAt: new Date() })
-            .where(and(...whereConditions))
-            .run();
-        }
-      } catch (error) {
-        // If Vercel operations fail, we should rollback the database change
-        // For now, we'll just throw the error
-        console.error("Error updating custom domain:", error);
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to update custom domain",
-        });
-      }
+      await opts.ctx.db
+        .update(page)
+        .set({ customDomain: newDomain, updatedAt: new Date() })
+        .where(and(...whereConditions))
+        .run();
     }),
 
   updatePasswordProtection: protectedProcedure
-    .meta({ track: Events.UpdatePage })
     .input(
       z.object({
         id: z.number(),
@@ -456,31 +348,6 @@ export const pageRouter = createTRPCRouter({
         eq(page.id, opts.input.id),
       ];
 
-      const limit = opts.ctx.workspace.limits;
-
-      // the user is not eligible for password protection
-      if (
-        limit["password-protection"] === false &&
-        opts.input.accessType === "password"
-      ) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message:
-            "Password protection is not available for your current plan.",
-        });
-      }
-
-      if (
-        limit["email-domain-protection"] === false &&
-        opts.input.accessType === "email-domain"
-      ) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message:
-            "Email domain protection is not available for your current plan.",
-        });
-      }
-
       await opts.ctx.db
         .update(page)
         .set({
@@ -494,7 +361,6 @@ export const pageRouter = createTRPCRouter({
     }),
 
   updateAppearance: protectedProcedure
-    .meta({ track: Events.UpdatePage })
     .input(
       z.object({
         id: z.number(),
@@ -543,7 +409,6 @@ export const pageRouter = createTRPCRouter({
     }),
 
   updateLinks: protectedProcedure
-    .meta({ track: Events.UpdatePage })
     .input(
       z.object({
         id: z.number(),
@@ -569,7 +434,6 @@ export const pageRouter = createTRPCRouter({
     }),
 
   updatePageConfiguration: protectedProcedure
-    .meta({ track: Events.UpdatePage })
     .input(
       z.object({
         id: z.number(),

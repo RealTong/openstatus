@@ -50,7 +50,6 @@ export function registerPostStatusReportUpdate(
   return api.openapi(createStatusUpdate, async (c) => {
     const workspaceId = c.get("workspace").id;
     const input = c.req.valid("json");
-    const limits = c.get("workspace").limits;
 
     const _statusReport = await db.query.statusReport.findFirst({
       where: and(
@@ -91,7 +90,7 @@ export function registerPostStatusReportUpdate(
       })
       .where(eq(statusReport.id, _statusReport.id));
 
-    if (limits["status-subscribers"] && _statusReport.pageId) {
+    if (_statusReport.pageId) {
       const subscribers = await db
         .select()
         .from(pageSubscriber)

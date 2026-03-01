@@ -32,7 +32,7 @@
   },
   "packageManager": "pnpm@10.26.0",
   "pnpm": {
-    "onlyBuiltDependencies": ["@sentry/cli", "@swc/core", "sharp"]
+    "onlyBuiltDependencies": ["@swc/core", "sharp"]
   },
   "name": "openstatus",
   "workspaces": ["apps/*", "packages/**/*", "packages/config/*"],

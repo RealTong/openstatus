@@ -1,13 +1,11 @@
 import { createRoute, z } from "@hono/zod-openapi";
 
-import { Events } from "@openstatus/analytics";
 import { and, db, eq, isNull, sql } from "@openstatus/db";
 import { monitor } from "@openstatus/db/src/schema";
 
 import { serialize } from "@openstatus/assertions";
 
 import { OpenStatusApiError, openApiErrorResponses } from "@/libs/errors";
-import { trackMiddleware } from "@/libs/middlewares";
 import type { monitorsApi } from "./index";
 import { HTTPMonitorSchema, MonitorSchema } from "./schema";
 import { getAssertionNew } from "./utils";
@@ -17,7 +15,6 @@ const postRoute = createRoute({
   tags: ["monitor"],
   summary: "Create a  http monitor",
   path: "/http",
-  middleware: [trackMiddleware(Events.CreateMonitor, ["url", "jobType"])],
   request: {
     body: {
       description: "The monitor to create",
@@ -44,47 +41,7 @@ const postRoute = createRoute({
 export function registerPostMonitorHTTP(api: typeof monitorsApi) {
   return api.openapi(postRoute, async (c) => {
     const workspaceId = c.get("workspace").id;
-    const limits = c.get("workspace").limits;
     const input = c.req.valid("json");
-    const count = (
-      await db
-        .select({ count: sql<number>`count(*)` })
-        .from(monitor)
-        .where(
-          and(eq(monitor.workspaceId, workspaceId), isNull(monitor.deletedAt)),
-        )
-        .all()
-    )[0].count;
-
-    if (count >= limits.monitors) {
-      throw new OpenStatusApiError({
-        code: "PAYMENT_REQUIRED",
-        message: "Upgrade for more monitors",
-      });
-    }
-
-    if (!limits.periodicity.includes(input.frequency)) {
-      throw new OpenStatusApiError({
-        code: "PAYMENT_REQUIRED",
-        message: "Upgrade for more periodicity",
-      });
-    }
-
-    if (limits["max-regions"] < input.regions.length) {
-      throw new OpenStatusApiError({
-        code: "PAYMENT_REQUIRED",
-        message: "Upgrade for more regions",
-      });
-    }
-
-    for (const region of input.regions) {
-      if (!limits.regions.includes(region)) {
-        throw new OpenStatusApiError({
-          code: "PAYMENT_REQUIRED",
-          message: "Upgrade for more regions",
-        });
-      }
-    }
 
     const { request, regions, assertions, openTelemetry, ...rest } = input;
 

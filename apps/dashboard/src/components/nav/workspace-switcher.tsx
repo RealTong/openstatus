@@ -57,9 +57,6 @@ export function WorkspaceSwitcher() {
                 <div className="truncate text-xs">
                   <span className="font-commit-mono tracking-tight">
                     {workspace.slug}
-                  </span>{" "}
-                  <span className="text-muted-foreground">
-                    {workspace.plan === "team" ? "pro" : workspace.plan}
                   </span>
                 </div>
               </div>

@@ -1,8 +1,6 @@
 import { createRoute } from "@hono/zod-openapi";
 
 import { OpenStatusApiError, openApiErrorResponses } from "@/libs/errors";
-import { trackMiddleware } from "@/libs/middlewares";
-import { Events } from "@openstatus/analytics";
 import { and, db, eq, inArray, isNull, sql } from "@openstatus/db";
 import {
   NotificationDataSchema,
@@ -19,7 +17,6 @@ const postRoute = createRoute({
   tags: ["notification"],
   summary: "Create a notification",
   path: "/",
-  middleware: [trackMiddleware(Events.CreateNotification, ["provider"])],
   request: {
     body: {
       description: "The notification to create",
@@ -46,31 +43,7 @@ const postRoute = createRoute({
 export function registerPostNotification(api: typeof notificationsApi) {
   return api.openapi(postRoute, async (c) => {
     const workspaceId = c.get("workspace").id;
-    const workspacePlan = c.get("workspace").plan;
-    const limits = c.get("workspace").limits;
     const input = c.req.valid("json");
-
-    if (input.provider === "sms" && workspacePlan === "free") {
-      throw new OpenStatusApiError({
-        code: "PAYMENT_REQUIRED",
-        message: "Upgrade for SMS",
-      });
-    }
-
-    const count = (
-      await db
-        .select({ count: sql<number>`count(*)` })
-        .from(notification)
-        .where(eq(notification.workspaceId, workspaceId))
-        .all()
-    )[0].count;
-
-    if (count >= limits["notification-channels"]) {
-      throw new OpenStatusApiError({
-        code: "PAYMENT_REQUIRED",
-        message: "Upgrade for more notification channels",
-      });
-    }
 
     const { payload, monitors, ...rest } = input;
 

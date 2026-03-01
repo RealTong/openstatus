@@ -4,7 +4,6 @@ import { Link } from "@/components/common/link";
 import {
   FormCard,
   FormCardContent,
-  FormCardContentUpgrade,
   FormCardDescription,
   FormCardFooter,
   FormCardFooterInfo,
@@ -30,7 +29,7 @@ import {
 } from "@openstatus/ui/components/ui/radio-group";
 import { cn } from "@openstatus/ui/lib/utils";
 import { isTRPCClientError } from "@trpc/client";
-import { Key, Lock, LockOpen, ShieldUser } from "lucide-react";
+import { Key, LockOpen, ShieldUser } from "lucide-react";
 import { useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -58,12 +57,10 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 export function FormPageAccess({
-  lockedMap,
   defaultValues,
   onSubmit,
   ...props
 }: Omit<React.ComponentProps<"form">, "onSubmit"> & {
-  lockedMap?: Map<z.infer<typeof accessTypeSchema>, boolean>;
   defaultValues?: FormValues;
   onSubmit: (values: FormValues) => Promise<void>;
 }) {
@@ -77,7 +74,6 @@ export function FormPageAccess({
     },
   });
   const watchAccessType = form.watch("accessType");
-  const locked = lockedMap?.get(watchAccessType);
 
   function submitAction(values: FormValues) {
     if (isPending) return;
@@ -172,11 +168,9 @@ export function FormPageAccess({
           ) : null}
           {watchAccessType === "password" ? (
             <FormCardContent className="grid gap-4">
-              {locked ? <FormCardContentUpgrade /> : null}
               <FormField
                 control={form.control}
                 name="password"
-                disabled={locked}
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Password</FormLabel>
@@ -195,11 +189,9 @@ export function FormPageAccess({
           ) : null}
           {watchAccessType === "email-domain" ? (
             <FormCardContent className="grid gap-4">
-              {locked ? <FormCardContentUpgrade /> : null}
               <FormField
                 control={form.control}
                 name="authEmailDomains"
-                disabled={locked}
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Email Domains</FormLabel>
@@ -229,18 +221,9 @@ export function FormPageAccess({
               </Link>
               .
             </FormCardFooterInfo>
-            {locked ? (
-              <Button type="button" asChild>
-                <Link href="/settings/billing">
-                  <Lock />
-                  Upgrade
-                </Link>
-              </Button>
-            ) : (
-              <Button type="submit" disabled={isPending}>
-                {isPending ? "Submitting..." : "Submit"}
-              </Button>
-            )}
+            <Button type="submit" disabled={isPending}>
+              {isPending ? "Submitting..." : "Submit"}
+            </Button>
           </FormCardFooter>
         </FormCard>
       </form>

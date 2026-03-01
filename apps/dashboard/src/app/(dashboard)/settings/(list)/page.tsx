@@ -21,11 +21,6 @@ const settings = [
     href: "/settings/general",
   },
   {
-    title: "Billing",
-    description: "Manage your billing information and payment methods.",
-    href: "/settings/billing",
-  },
-  {
     title: "Account",
     description: "Manage your account information.",
     href: "/settings/account",

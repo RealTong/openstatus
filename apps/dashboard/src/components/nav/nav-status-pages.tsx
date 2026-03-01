@@ -24,12 +24,10 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
 
-import { UpgradeDialog } from "@/components/dialogs/upgrade";
 import { useTRPC } from "@/lib/trpc/client";
 import { Skeleton } from "@openstatus/ui/components/ui/skeleton";
 import { cn } from "@openstatus/ui/lib/utils";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
 
 const STATUS = {
   operational: "bg-success border border-success",
@@ -39,7 +37,6 @@ const STATUS = {
 
 export function NavStatusPages() {
   const { isMobile, setOpenMobile } = useSidebar();
-  const [openUpgradeDialog, setOpenUpgradeDialog] = useState(false);
   const pathname = usePathname();
   const trpc = useTRPC();
   const router = useRouter();
@@ -63,8 +60,6 @@ export function NavStatusPages() {
 
   if (!workspace || !statusPages) return null;
 
-  const limitReached = statusPages.length >= workspace.limits["status-pages"];
-
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
       <SidebarGroupLabel className="flex items-center justify-between pr-1">
@@ -83,13 +78,8 @@ export function NavStatusPages() {
             <Tooltip>
               <TooltipTrigger asChild>
                 <SidebarMenuAction
-                  data-limited={limitReached}
-                  className="relative top-0 right-0 border data-[limited=true]:opacity-80"
+                  className="relative top-0 right-0 border"
                   onClick={() => {
-                    if (limitReached) {
-                      setOpenUpgradeDialog(true);
-                      return;
-                    }
                     router.push("/status-pages/create");
                     setOpenMobile(false);
                   }}
@@ -99,7 +89,7 @@ export function NavStatusPages() {
                 </SidebarMenuAction>
               </TooltipTrigger>
               <TooltipContent side="right" align="center">
-                {limitReached ? "Upgrade" : "Create Status Page"}
+                Create Status Page
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -187,11 +177,6 @@ export function NavStatusPages() {
           </SidebarMenuItem>
         )}
       </SidebarMenu>
-      <UpgradeDialog
-        open={openUpgradeDialog}
-        onOpenChange={setOpenUpgradeDialog}
-        limit="status-pages"
-      />
     </SidebarGroup>
   );
 }

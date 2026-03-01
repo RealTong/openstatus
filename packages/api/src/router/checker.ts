@@ -1,6 +1,5 @@
 import { TRPCError } from "@trpc/server";
 
-import { Events } from "@openstatus/analytics";
 import {
   deserialize,
   dnsRecords,
@@ -483,20 +482,17 @@ function generateUrl({ row }: { row: z.infer<typeof selectMonitorSchema> }) {
 
 export const checkerRouter = createTRPCRouter({
   testHttp: protectedProcedure
-    .meta({ track: Events.TestMonitor })
     .input(httpTestInput)
     .mutation(async ({ input }) => {
       return testHttp(input);
     }),
 
   testTcp: protectedProcedure
-    .meta({ track: Events.TestMonitor })
     .input(tcpTestInput)
     .mutation(async ({ input }) => {
       return testTcp(input);
     }),
   testDns: protectedProcedure
-    .meta({ track: Events.TestMonitor })
     .input(dnsTestInput)
     .mutation(async ({ input }) => {
       return testDns(input);

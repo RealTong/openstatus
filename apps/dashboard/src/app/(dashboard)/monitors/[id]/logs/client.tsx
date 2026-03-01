@@ -1,12 +1,5 @@
 "use client";
 
-import { Link } from "@/components/common/link";
-import {
-  BillingOverlay,
-  BillingOverlayButton,
-  BillingOverlayContainer,
-  BillingOverlayDescription,
-} from "@/components/content/billing-overlay";
 import {
   SectionDescription,
   SectionGroup,
@@ -25,11 +18,9 @@ import { Sheet } from "@/components/data-table/response-logs/data-table-sheet";
 import { DataTable } from "@/components/ui/data-table/data-table";
 import { DataTablePagination } from "@/components/ui/data-table/data-table-pagination";
 import { DataTableSkeleton } from "@/components/ui/data-table/data-table-skeleton";
-import { exampleLogs } from "@/data/response-logs";
 import { useTRPC } from "@/lib/trpc/client";
 import { useQuery } from "@tanstack/react-query";
 import type { PaginationState } from "@tanstack/react-table";
-import { Lock } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useQueryStates } from "nuqs";
 import { useCallback, useMemo } from "react";
@@ -42,18 +33,15 @@ export function Client() {
     { regions, status, selected, trigger, from, to, pageIndex, pageSize },
     setSearchParams,
   ] = useQueryStates(searchParamsParsers);
-  const { data: workspace } = useQuery(trpc.workspace.get.queryOptions());
   const { data: monitor } = useQuery(
     trpc.monitor.get.queryOptions({ id: Number.parseInt(id) }),
   );
-  const enabled = workspace && workspace?.plan !== "free";
   const { data: _logs, isLoading } = useQuery({
     ...trpc.tinybird.list.queryOptions({ monitorId: id, from, to }),
-    enabled,
   });
   const { data: _log } = useQuery({
     ...trpc.tinybird.get.queryOptions({ id: selected, monitorId: id }),
-    enabled: !!selected && enabled,
+    enabled: !!selected,
   });
 
   const pagination = useMemo(
@@ -80,7 +68,7 @@ export function Client() {
     [monitor?.privateLocations],
   );
 
-  if (!workspace || !monitor) return null;
+  if (!monitor) return null;
 
   return (
     <SectionGroup>
@@ -111,8 +99,6 @@ export function Client() {
       <Section>
         {isLoading ? (
           <DataTableSkeleton rows={10} />
-        ) : !enabled ? (
-          <BillingPlaceholder />
         ) : (
           <DataTable
             data={_logs?.data ?? []}
@@ -147,33 +133,5 @@ export function Client() {
         />
       </Section>
     </SectionGroup>
-  );
-}
-
-function BillingPlaceholder() {
-  const columns = useMemo(() => getColumns([]), []);
-  return (
-    <BillingOverlayContainer>
-      <DataTable data={exampleLogs} columns={columns} />
-      <BillingOverlay>
-        <BillingOverlayButton asChild>
-          <Link href="/settings/billing">
-            <Lock />
-            Upgrade
-          </Link>
-        </BillingOverlayButton>
-        <BillingOverlayDescription>
-          Access response headers, timing phases and more for each request.{" "}
-          <Link
-            href="https://docs.openstatus.dev/monitoring/monitor-data-collected/"
-            rel="noreferrer"
-            target="_blank"
-          >
-            Learn more
-          </Link>
-          .
-        </BillingOverlayDescription>
-      </BillingOverlay>
-    </BillingOverlayContainer>
   );
 }

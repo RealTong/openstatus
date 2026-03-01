@@ -17,7 +17,6 @@ import {
   statusReport,
 } from "@openstatus/db/src/schema";
 
-import { Events } from "@openstatus/analytics";
 import { TRPCError } from "@trpc/server";
 import { endOfDay, startOfDay, subDays } from "date-fns";
 import { createTRPCRouter, publicProcedure } from "../trpc";
@@ -347,7 +346,7 @@ export const statusPageRouter = createTRPCRouter({
         })
         .sort((a, b) => a.order - b.order);
 
-      const whiteLabel = ws.data?.limits["white-label"] ?? false;
+      const whiteLabel = true;
 
       const statusReports = _page.statusReports.sort((a, b) => {
         // Sort reports without updates to the beginning
@@ -378,7 +377,7 @@ export const statusPageRouter = createTRPCRouter({
         incidents: monitors.flatMap((m) => m.incidents) ?? [],
         statusReports,
         maintenances,
-        workspacePlan: _page.workspace.plan,
+        workspacePlan: undefined,
         status,
         lastEvents,
         openEvents,
@@ -459,7 +458,7 @@ export const statusPageRouter = createTRPCRouter({
         maintenances: _page.maintenances,
         pageComponents: _page.pageComponents,
         pageComponentGroups: _page.pageComponentGroups,
-        workspacePlan: _page.workspace.plan,
+        workspacePlan: undefined,
       });
     }),
 
@@ -1003,7 +1002,6 @@ export const statusPageRouter = createTRPCRouter({
     }),
 
   subscribe: publicProcedure
-    .meta({ track: Events.SubscribePage, trackProps: ["slug", "email"] })
     .input(z.object({ slug: z.string().toLowerCase(), email: z.email() }))
     .mutation(async (opts) => {
       if (!opts.input.slug) return null;
@@ -1028,13 +1026,6 @@ export const statusPageRouter = createTRPCRouter({
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "Workspace data is invalid",
-        });
-      }
-
-      if (!workspace.data.limits["status-subscribers"]) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Upgrade to use status subscribers",
         });
       }
 
@@ -1106,7 +1097,6 @@ export const statusPageRouter = createTRPCRouter({
     }),
 
   validateEmailDomain: publicProcedure
-    .meta({ track: Events.ValidateEmailDomain, trackProps: ["slug", "email"] })
     .input(z.object({ slug: z.string().toLowerCase(), email: z.string() }))
     .query(async (opts) => {
       if (!opts.input.slug) return null;
@@ -1147,7 +1137,6 @@ export const statusPageRouter = createTRPCRouter({
     }),
 
   verifyEmail: publicProcedure
-    .meta({ track: Events.VerifySubscribePage, trackProps: ["slug"] })
     .input(z.object({ slug: z.string().toLowerCase(), token: z.string() }))
     .mutation(async (opts) => {
       if (!opts.input.slug) return null;

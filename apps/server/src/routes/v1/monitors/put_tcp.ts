@@ -4,8 +4,6 @@ import { and, db, eq, isNull } from "@openstatus/db";
 import { monitor } from "@openstatus/db/src/schema";
 
 import { OpenStatusApiError, openApiErrorResponses } from "@/libs/errors";
-import { trackMiddleware } from "@/libs/middlewares";
-import { Events } from "@openstatus/analytics";
 import type { monitorsApi } from "./index";
 import { MonitorSchema, ParamsSchema, TCPMonitorSchema } from "./schema";
 
@@ -14,7 +12,6 @@ const putRoute = createRoute({
   tags: ["monitor"],
   summary: "Update an TCP monitor",
   path: "/tcp/{id}",
-  middleware: [trackMiddleware(Events.UpdateMonitor)],
   request: {
     params: ParamsSchema,
     body: {
@@ -42,27 +39,8 @@ const putRoute = createRoute({
 export function registerPutTCPMonitor(api: typeof monitorsApi) {
   return api.openapi(putRoute, async (c) => {
     const workspaceId = c.get("workspace").id;
-    const limits = c.get("workspace").limits;
     const { id } = c.req.valid("param");
     const input = c.req.valid("json");
-
-    if (input.frequency && !limits.periodicity.includes(input.frequency)) {
-      throw new OpenStatusApiError({
-        code: "PAYMENT_REQUIRED",
-        message: "Upgrade for more periodicity",
-      });
-    }
-
-    if (input.regions) {
-      for (const region of input.regions) {
-        if (!limits.regions.includes(region)) {
-          throw new OpenStatusApiError({
-            code: "PAYMENT_REQUIRED",
-            message: "Upgrade for more regions",
-          });
-        }
-      }
-    }
 
     const _monitor = await db
       .select()

@@ -1,9 +1,7 @@
 import { createRoute } from "@hono/zod-openapi";
 
 import { OpenStatusApiError, openApiErrorResponses } from "@/libs/errors";
-import { trackMiddleware } from "@/libs/middlewares";
 import { notEmpty } from "@/utils/not-empty";
-import { Events } from "@openstatus/analytics";
 import { and, eq, inArray, isNull, sql } from "@openstatus/db";
 import { db } from "@openstatus/db/src/db";
 import {
@@ -21,7 +19,6 @@ const putRoute = createRoute({
   tags: ["page"],
   summary: "Update a status page",
   path: "/{id}",
-  middleware: [trackMiddleware(Events.UpdatePage)],
   request: {
     params: ParamsSchema,
     body: {
@@ -49,51 +46,13 @@ const putRoute = createRoute({
 export function registerPutPage(api: typeof pagesApi) {
   return api.openapi(putRoute, async (c) => {
     const workspaceId = c.get("workspace").id;
-    const limits = c.get("workspace").limits;
     const { id } = c.req.valid("param");
     const input = c.req.valid("json");
-
-    if (input.customDomain && !limits["custom-domain"]) {
-      throw new OpenStatusApiError({
-        code: "PAYMENT_REQUIRED",
-        message: "Upgrade for custom domain",
-      });
-    }
 
     if (input.customDomain?.toLowerCase().includes("openstatus")) {
       throw new OpenStatusApiError({
         code: "BAD_REQUEST",
         message: "Domain cannot contain 'openstatus'",
-      });
-    }
-
-    if (
-      limits["password-protection"] === false &&
-      input?.passwordProtected === true
-    ) {
-      throw new OpenStatusApiError({
-        code: "PAYMENT_REQUIRED",
-        message: "Upgrade for password protection",
-      });
-    }
-
-    if (
-      limits["email-domain-protection"] === false &&
-      (input?.accessType === "email-domain" || input?.authEmailDomains?.length)
-    ) {
-      throw new OpenStatusApiError({
-        code: "PAYMENT_REQUIRED",
-        message: "Upgrade for email domain protection",
-      });
-    }
-
-    if (
-      limits["password-protection"] === false &&
-      (input?.accessType === "password" || input?.password)
-    ) {
-      throw new OpenStatusApiError({
-        code: "PAYMENT_REQUIRED",
-        message: "Upgrade for password protection",
       });
     }
 

@@ -4,8 +4,6 @@ import { and, db, eq } from "@openstatus/db";
 import { incidentTable } from "@openstatus/db/src/schema/incidents";
 
 import { OpenStatusApiError, openApiErrorResponses } from "@/libs/errors";
-import { trackMiddleware } from "@/libs/middlewares";
-import { Events } from "@openstatus/analytics";
 import type { incidentsApi } from "./index";
 import { IncidentSchema, ParamsSchema } from "./schema";
 
@@ -15,7 +13,6 @@ const putRoute = createRoute({
   summary: "Update an incident",
   description: "Acknowledge or resolve an incident",
   path: "/{id}",
-  middleware: [trackMiddleware(Events.UpdateIncident)],
   request: {
     params: ParamsSchema,
     body: {

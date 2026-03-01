@@ -1,8 +1,6 @@
 import { env } from "@/env";
 import { OpenStatusApiError, openApiErrorResponses } from "@/libs/errors";
-import { trackMiddleware } from "@/libs/middlewares";
 import { createRoute } from "@hono/zod-openapi";
-import { Events } from "@openstatus/analytics";
 import { and, db, eq, inArray, isNotNull, isNull } from "@openstatus/db";
 import { monitor, page, pageSubscriber } from "@openstatus/db/src/schema";
 import { maintenance } from "@openstatus/db/src/schema/maintenances";
@@ -21,7 +19,6 @@ const postRoute = createRoute({
   tags: ["maintenance"],
   summary: "Create a maintenance",
   path: "/",
-  middleware: [trackMiddleware(Events.CreateMaintenance)],
   request: {
     body: {
       content: {
@@ -48,7 +45,6 @@ export function registerPostMaintenance(api: typeof maintenancesApi) {
   return api.openapi(postRoute, async (c) => {
     const workspaceId = c.get("workspace").id;
     const input = c.req.valid("json");
-    const limits = c.get("workspace").limits;
 
     const { monitorIds, pageId } = input;
 
@@ -131,7 +127,7 @@ export function registerPostMaintenance(api: typeof maintenancesApi) {
       return newMaintenance;
     });
 
-    if (limits["status-subscribers"] && _newMaintenance.pageId) {
+    if (_newMaintenance.pageId) {
       const subscribers = await db
         .select()
         .from(pageSubscriber)

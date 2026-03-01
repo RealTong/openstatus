@@ -12,7 +12,6 @@ const getBaseUrl = () => {
 };
 
 const lambdas = [
-  "stripeRouter",
   "emailRouter",
   "apiKeyRouter",
   "integrationRouter",

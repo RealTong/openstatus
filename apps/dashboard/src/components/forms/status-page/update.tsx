@@ -21,7 +21,6 @@ export function FormStatusPageUpdate() {
   );
   const queryClient = useQueryClient();
   const { data: monitors } = useQuery(trpc.monitor.list.queryOptions());
-  const { data: workspace } = useQuery(trpc.workspace.get.queryOptions());
   const updateStatusPageMutation = useMutation(
     trpc.page.updateGeneral.mutationOptions({
       onSuccess: () => {
@@ -74,7 +73,7 @@ export function FormStatusPageUpdate() {
     }),
   );
 
-  if (!statusPage || !monitors || !workspace) return null;
+  if (!statusPage || !monitors) return null;
 
   return (
     <FormCardGroup>
@@ -109,7 +108,6 @@ export function FormStatusPageUpdate() {
         }}
       />
       <FormCustomDomain
-        locked={workspace.limits["custom-domain"] === false}
         defaultValues={{
           domain: statusPage.customDomain ?? undefined,
         }}
@@ -149,16 +147,6 @@ export function FormStatusPageUpdate() {
         }}
       />
       <FormPageAccess
-        lockedMap={
-          new Map([
-            ["public", false],
-            ["password", workspace.limits["password-protection"] === false],
-            [
-              "email-domain",
-              workspace.limits["email-domain-protection"] === false,
-            ],
-          ])
-        }
         defaultValues={{
           accessType: statusPage.accessType,
           password: statusPage.password ?? undefined,

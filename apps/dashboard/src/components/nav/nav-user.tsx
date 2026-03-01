@@ -2,11 +2,9 @@
 
 import {
   ChevronsUpDown,
-  CreditCard,
   Laptop,
   LogOut,
   Moon,
-  Sparkles,
   Sun,
   User,
 } from "lucide-react";
@@ -107,21 +105,6 @@ export function NavUser() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            {workspace.plan === "free" ? (
-              <>
-                <DropdownMenuItem asChild>
-                  <Link
-                    href="/settings/billing"
-                    onClick={() => setOpenMobile(false)}
-                    className="font-commit-mono tracking-tight"
-                  >
-                    <Sparkles />
-                    Upgrade Workspace
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-              </>
-            ) : null}
             <DropdownMenuGroup className="font-commit-mono tracking-tight">
               <DropdownMenuItem asChild>
                 <Link
@@ -157,15 +140,6 @@ export function NavUser() {
                   </DropdownMenuSubContent>
                 </DropdownMenuPortal>
               </DropdownMenuSub>
-              <DropdownMenuItem asChild>
-                <Link
-                  href="/settings/billing"
-                  onClick={() => setOpenMobile(false)}
-                >
-                  <CreditCard />
-                  Billing
-                </Link>
-              </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem

@@ -11,7 +11,6 @@ import {
   FormCardFooterInfo,
   FormCardHeader,
   FormCardTitle,
-  FormCardUpgrade,
 } from "@/components/forms/form-card";
 import {
   FormCard,
@@ -37,7 +36,6 @@ export default function Page() {
           <SectionTitle>Account</SectionTitle>
         </SectionHeader>
         <FormCard>
-          <FormCardUpgrade />
           <FormCardHeader>
             <FormCardTitle>Personal Information</FormCardTitle>
             <FormCardDescription>

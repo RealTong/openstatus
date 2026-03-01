@@ -1,7 +1,5 @@
 import { z } from "@hono/zod-openapi";
 
-import { workspacePlans } from "@openstatus/db/src/schema/workspaces/constants";
-
 export const WorkspaceSchema = z
   .object({
     name: z
@@ -9,9 +7,6 @@ export const WorkspaceSchema = z
       .optional()
       .openapi({ description: "The current workspace name" }),
     slug: z.string().openapi({ description: "The current workspace slug" }),
-    plan: z.enum(workspacePlans).nullable().prefault("free").openapi({
-      description: "The current workspace plan",
-    }),
   })
   .openapi("Workspace");
 

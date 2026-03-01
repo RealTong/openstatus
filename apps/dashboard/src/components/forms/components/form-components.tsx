@@ -5,7 +5,6 @@ import {
   EmptyStateContainer,
   EmptyStateTitle,
 } from "@/components/content/empty-state";
-import { UpgradeDialog } from "@/components/dialogs/upgrade";
 import {
   FormCard,
   FormCardContent,
@@ -285,7 +284,6 @@ export function FormComponents({
   const [isPending, startTransition] = useTransition();
   const watchComponents = form.watch("components");
   const watchGroups = form.watch("groups");
-  const [openUpgradeDialog, setOpenUpgradeDialog] = useState(false);
   const [data, setData] = useState<(PageComponent | ComponentGroup)[]>(
     getSortedItems(
       allPageComponents,
@@ -317,13 +315,8 @@ export function FormComponents({
   }, [watchComponents, watchGroups, allPageComponents, monitors]);
 
   const validateLimit = useCallback(() => {
-    const limitReached = workspace.limits["page-components"] <= data.length;
-    if (limitReached) {
-      setOpenUpgradeDialog(true);
-      return false;
-    }
     return true;
-  }, [workspace, data.length]);
+  }, []);
 
   const onValueChange = useCallback(
     (newItems: (PageComponent | ComponentGroup)[]) => {
@@ -695,11 +688,6 @@ export function FormComponents({
           </FormCard>
         </form>
       </Form>
-      <UpgradeDialog
-        limit="page-components"
-        open={openUpgradeDialog}
-        onOpenChange={setOpenUpgradeDialog}
-      />
     </>
   );
 }

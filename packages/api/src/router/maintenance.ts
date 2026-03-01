@@ -10,14 +10,12 @@ import {
   selectPageComponentSchema,
 } from "@openstatus/db/src/schema";
 
-import { Events } from "@openstatus/analytics";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { getPeriodDate, periods } from "./utils";
 
 export const maintenanceRouter = createTRPCRouter({
   delete: protectedProcedure
-    .meta({ track: Events.DeleteMaintenance })
     .input(z.object({ id: z.number() }))
     .mutation(async (opts) => {
       return await opts.ctx.db
@@ -85,7 +83,6 @@ export const maintenanceRouter = createTRPCRouter({
     }),
 
   new: protectedProcedure
-    .meta({ track: Events.CreateMaintenance })
     .input(
       z.object({
         pageId: z.number(),
@@ -165,7 +162,6 @@ export const maintenanceRouter = createTRPCRouter({
     }),
 
   update: protectedProcedure
-    .meta({ track: Events.UpdateMaintenance })
     .input(
       z.object({
         id: z.number(),

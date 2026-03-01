@@ -1,7 +1,5 @@
 import { OpenStatusApiError, openApiErrorResponses } from "@/libs/errors";
-import { trackMiddleware } from "@/libs/middlewares";
 import { createRoute } from "@hono/zod-openapi";
-import { Events } from "@openstatus/analytics";
 import { and, db, eq, inArray, isNull } from "@openstatus/db";
 import { monitor, page } from "@openstatus/db/src/schema";
 import { maintenance } from "@openstatus/db/src/schema/maintenances";
@@ -17,7 +15,6 @@ const putRoute = createRoute({
   tags: ["maintenance"],
   summary: "Update a maintenance",
   path: "/{id}",
-  middleware: [trackMiddleware(Events.UpdateMaintenance)],
   request: {
     params: ParamsSchema,
     body: {

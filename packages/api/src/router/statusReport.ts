@@ -15,14 +15,12 @@ import {
   statusReportsToPageComponents,
 } from "@openstatus/db/src/schema";
 
-import { Events } from "@openstatus/analytics";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { getPeriodDate, periods } from "./utils";
 
 export const statusReportRouter = createTRPCRouter({
   createStatusReportUpdate: protectedProcedure
-    .meta({ track: Events.CreateReportUpdate })
     .input(
       insertStatusReportUpdateSchema.extend({
         notifySubscribers: z.boolean().nullish(),
@@ -59,7 +57,6 @@ export const statusReportRouter = createTRPCRouter({
     }),
 
   updateStatusReportUpdate: protectedProcedure
-    .meta({ track: Events.UpdateReportUpdate })
     .input(insertStatusReportUpdateSchema)
     .mutation(async (opts) => {
       const statusReportUpdateInput = opts.input;
@@ -186,7 +183,6 @@ export const statusReportRouter = createTRPCRouter({
     }),
 
   create: protectedProcedure
-    .meta({ track: Events.CreateReport })
     .input(
       z.object({
         title: z.string(),
@@ -275,7 +271,6 @@ export const statusReportRouter = createTRPCRouter({
     }),
 
   updateStatus: protectedProcedure
-    .meta({ track: Events.UpdateReport })
     .input(
       z.object({
         id: z.number(),
@@ -356,7 +351,6 @@ export const statusReportRouter = createTRPCRouter({
     }),
 
   delete: protectedProcedure
-    .meta({ track: Events.DeleteReport })
     .input(z.object({ id: z.number() }))
     .mutation(async (opts) => {
       const whereConditions: SQL[] = [
@@ -373,7 +367,6 @@ export const statusReportRouter = createTRPCRouter({
     }),
 
   deleteUpdate: protectedProcedure
-    .meta({ track: Events.DeleteReportUpdate })
     .input(z.object({ id: z.number() }))
     .mutation(async (opts) => {
       await opts.ctx.db.transaction(async (tx) => {

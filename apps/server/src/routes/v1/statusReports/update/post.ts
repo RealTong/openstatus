@@ -55,7 +55,6 @@ export function registerStatusReportUpdateRoutes(api: typeof statusReportsApi) {
     const input = c.req.valid("json");
     const { id } = c.req.valid("param");
     const workspaceId = c.get("workspace").id;
-    const limits = c.get("workspace").limits;
 
     const _statusReport = await db
       .update(statusReport)
@@ -87,7 +86,7 @@ export function registerStatusReportUpdateRoutes(api: typeof statusReportsApi) {
       .returning()
       .get();
 
-    if (limits["status-subscribers"] && _statusReport.pageId) {
+    if (_statusReport.pageId) {
       const _statusReportWithRelations = await db.query.statusReport.findFirst({
         where: eq(statusReport.id, Number(id)),
         with: {

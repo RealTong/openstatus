@@ -28,23 +28,20 @@ import {
 } from "@openstatus/ui/components/ui/form";
 import { Slider } from "@openstatus/ui/components/ui/slider";
 import { cn } from "@openstatus/ui/lib/utils";
-import { useState, useTransition } from "react";
+import { useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
 import { IconCloudProviderTooltip } from "@/components/common/icon-cloud-provider";
 import { Note, NoteButton } from "@/components/common/note";
-import { UpgradeDialog } from "@/components/dialogs/upgrade";
-import { useTRPC } from "@/lib/trpc/client";
 import {
+  AVAILABLE_REGIONS,
   formatRegionCode,
   groupByContinent,
-  regionDict,
 } from "@openstatus/regions";
-import { useQuery } from "@tanstack/react-query";
 import { isTRPCClientError } from "@trpc/client";
-import { CircleX, Globe, Info } from "lucide-react";
+import { Globe, Info } from "lucide-react";
 
 const DEFAULT_PERIODICITY = "10m";
 const DEFAULT_REGIONS = ["ams", "fra", "iad", "syd", "jnb", "gru"];
@@ -69,9 +66,6 @@ export function FormSchedulingRegions({
   onSubmit: (values: FormValues) => Promise<void>;
   privateLocations: { id: number; name: string }[];
 }) {
-  const trpc = useTRPC();
-  const [openDialog, setOpenDialog] = useState(false);
-  const { data: workspace } = useQuery(trpc.workspace.get.queryOptions());
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: defaultValues ?? {
@@ -81,7 +75,6 @@ export function FormSchedulingRegions({
     },
   });
   const [isPending, startTransition] = useTransition();
-  const watchPeriodicity = form.watch("periodicity");
   const watchRegions = form.watch("regions");
   const watchPrivateLocations = form.watch("privateLocations");
 
@@ -109,15 +102,7 @@ export function FormSchedulingRegions({
     });
   }
 
-  if (!workspace) return null;
-
-  const allowedRegions = workspace.limits.regions.filter(
-    (r) => !regionDict[r as keyof typeof regionDict].deprecated,
-  );
-  const maxRegions = workspace.limits["max-regions"];
-  const periodicity = workspace.limits.periodicity;
-
-  const isMaxed = watchRegions.length >= maxRegions;
+  const allowedRegions = AVAILABLE_REGIONS as unknown as string[];
 
   return (
     <Form {...form}>
@@ -145,10 +130,6 @@ export function FormSchedulingRegions({
                         onValueChange={(value) => {
                           field.onChange(PERIODICITY[value[0]]);
                         }}
-                        className={cn(
-                          !periodicity.includes(watchPeriodicity) &&
-                            "[&_[data-slot=slider-range]]:bg-destructive",
-                        )}
                       />
                       <span
                         className="mt-3 flex w-full items-center justify-between gap-1 px-2.5 font-medium text-muted-foreground text-xs"
@@ -172,15 +153,6 @@ export function FormSchedulingRegions({
                 </FormItem>
               )}
             />
-            {!periodicity.includes(watchPeriodicity) ? (
-              <Note color="error">
-                <CircleX />
-                The periodicity you are selecting is not allowed for your plan.
-                <NoteButton type="button" onClick={() => setOpenDialog(true)}>
-                  Upgrade your plan
-                </NoteButton>
-              </Note>
-            ) : null}
           </FormCardContent>
           <FormCardSeparator />
           <FormCardContent className="grid gap-4">
@@ -211,10 +183,6 @@ export function FormSchedulingRegions({
                             r.filter((r) => allowedRegions.includes(r.code))
                               .length;
 
-                          const disabled =
-                            r.length + watchRegions.length - selected >
-                            maxRegions;
-
                           return (
                             <div key={continent} className="space-y-2">
                               <div className="flex items-center justify-between">
@@ -231,7 +199,6 @@ export function FormSchedulingRegions({
                                   className={cn(
                                     isAllSelected && "text-muted-foreground",
                                   )}
-                                  disabled={disabled}
                                   onClick={() => {
                                     if (!isAllSelected) {
                                       // Add all regions from this continent
@@ -276,7 +243,7 @@ export function FormSchedulingRegions({
                                           ? false
                                           : !allowedRegions.includes(
                                               region.code,
-                                            ) || isMaxed;
+                                            );
                                         const deprecated = region.deprecated;
                                         return (
                                           <FormItem
@@ -437,13 +404,7 @@ export function FormSchedulingRegions({
           </FormCardContent>
           <FormCardFooter>
             <FormCardFooterInfo>
-              Your plan allows you to run{" "}
-              <span className="font-medium text-foreground">{maxRegions}</span>{" "}
-              out of{" "}
-              <span className="font-medium text-foreground">
-                {allowedRegions.length}
-              </span>{" "}
-              regions. Learn more about{" "}
+              Learn more about{" "}
               <Link
                 href="https://docs.openstatus.dev/reference/http-monitor/#regions"
                 rel="noreferrer"
@@ -467,7 +428,6 @@ export function FormSchedulingRegions({
           </FormCardFooter>
         </FormCard>
       </form>
-      <UpgradeDialog open={openDialog} onOpenChange={setOpenDialog} />
     </Form>
   );
 }

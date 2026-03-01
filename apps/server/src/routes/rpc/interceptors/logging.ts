@@ -48,7 +48,6 @@ export function loggingInterceptor(): Interceptor {
           event.duration_ms = Date.now() - startTime;
           event.outcome = "success";
           event.workspace_id = rpcCtx?.workspace.id;
-          event.workspace_plan = rpcCtx?.workspace.plan;
 
           return response;
         } catch (error) {

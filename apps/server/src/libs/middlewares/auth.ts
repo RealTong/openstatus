@@ -1,5 +1,3 @@
-import { UnkeyCore } from "@unkey/api/core";
-import { keysVerifyKey } from "@unkey/api/funcs/keysVerifyKey";
 import type { Context, Next } from "hono";
 
 import { env } from "@/env";
@@ -88,8 +86,6 @@ export async function authMiddleware(
   event.workspace = {
     id: workspaceData.id,
     name: workspaceData.name,
-    plan: workspaceData.plan,
-    stripe_id: workspaceData.stripeId,
   };
   event.auth_method = result.authMethod;
   c.set("workspace", workspaceData);
@@ -147,23 +143,10 @@ export async function validateKey(key: string): Promise<{
         };
       }
 
-      // 2. Fall back to Unkey (transition period)
-      const unkey = new UnkeyCore({ rootKey: env.UNKEY_TOKEN });
-      const res = await keysVerifyKey(unkey, { key });
-      if (!res.ok) {
-        logger.error("Unkey Error {*}", { ...res.error });
-        return {
-          result: { valid: false, ownerId: undefined },
-          error: { message: "Invalid API verification" },
-        };
-      }
+      // No matching key found
       return {
-        result: {
-          valid: res.value.data.valid,
-          ownerId: res.value.data.identity?.externalId,
-          authMethod: "unkey",
-        },
-        error: undefined,
+        result: { valid: false },
+        error: { message: "Invalid API Key" },
       };
     }
     // Special bypass for our workspace

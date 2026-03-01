@@ -14,7 +14,7 @@ import {
   statusAssertion,
   textBodyAssertion,
 } from "@openstatus/assertions";
-import { type SQL, and, count, eq, inArray, isNull } from "@openstatus/db";
+import { type SQL, and, eq, inArray, isNull } from "@openstatus/db";
 import {
   insertMonitorSchema,
   maintenancesToMonitors,
@@ -36,9 +36,7 @@ import {
   selectPrivateLocationSchema,
 } from "@openstatus/db/src/schema";
 
-import { Events } from "@openstatus/analytics";
 import {
-  freeFlyRegions,
   monitorPeriodicity,
   monitorRegions,
 } from "@openstatus/db/src/schema/constants";
@@ -48,7 +46,6 @@ import { testDns, testHttp, testTcp } from "./checker";
 
 export const monitorRouter = createTRPCRouter({
   delete: protectedProcedure
-    .meta({ track: Events.DeleteMonitor })
     .input(z.object({ id: z.number() }))
     .mutation(async (opts) => {
       const monitorToDelete = await opts.ctx.db
@@ -247,7 +244,6 @@ export const monitorRouter = createTRPCRouter({
     }),
 
   clone: protectedProcedure
-    .meta({ track: Events.CloneMonitor })
     .input(z.object({ id: z.number() }))
     .mutation(async ({ ctx, input }) => {
       const whereConditions: SQL[] = [
@@ -262,13 +258,6 @@ export const monitorRouter = createTRPCRouter({
           isNull(monitor.deletedAt),
         ),
       });
-
-      if (_monitors.length >= ctx.workspace.limits.monitors) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "You have reached the maximum number of monitors.",
-        });
-      }
 
       const data = await ctx.db.query.monitor.findFirst({
         where: and(...whereConditions),
@@ -303,7 +292,6 @@ export const monitorRouter = createTRPCRouter({
     }),
 
   updateRetry: protectedProcedure
-    .meta({ track: Events.UpdateMonitor })
     .input(z.object({ id: z.number(), retry: z.number() }))
     .mutation(async ({ ctx, input }) => {
       const whereConditions: SQL[] = [
@@ -320,7 +308,6 @@ export const monitorRouter = createTRPCRouter({
     }),
 
   updateFollowRedirects: protectedProcedure
-    .meta({ track: Events.UpdateMonitor })
     .input(z.object({ id: z.number(), followRedirects: z.boolean() }))
     .mutation(async ({ ctx, input }) => {
       const whereConditions: SQL[] = [
@@ -340,7 +327,6 @@ export const monitorRouter = createTRPCRouter({
     }),
 
   updateOtel: protectedProcedure
-    .meta({ track: Events.UpdateMonitor })
     .input(
       z.object({
         id: z.number(),
@@ -371,7 +357,6 @@ export const monitorRouter = createTRPCRouter({
     }),
 
   updatePublic: protectedProcedure
-    .meta({ track: Events.UpdateMonitor })
     .input(z.object({ id: z.number(), public: z.boolean() }))
     .mutation(async ({ ctx, input }) => {
       const whereConditions: SQL[] = [
@@ -388,7 +373,6 @@ export const monitorRouter = createTRPCRouter({
     }),
 
   updateSchedulingRegions: protectedProcedure
-    .meta({ track: Events.UpdateMonitor })
     .input(
       z.object({
         id: z.number(),
@@ -403,34 +387,6 @@ export const monitorRouter = createTRPCRouter({
         eq(monitor.workspaceId, ctx.workspace.id),
         isNull(monitor.deletedAt),
       ];
-
-      const limits = ctx.workspace.limits;
-
-      if (!limits.periodicity.includes(input.periodicity)) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Upgrade to check more often.",
-        });
-      }
-
-      if (limits["max-regions"] < input.regions.length) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "You have reached the maximum number of regions.",
-        });
-      }
-
-      if (
-        input.regions.length > 0 &&
-        !input.regions.every((r) =>
-          limits.regions.includes(r as (typeof limits)["regions"][number]),
-        )
-      ) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "You don't have access to this region.",
-        });
-      }
 
       const existingMonitor = await ctx.db.query.monitor.findFirst({
         where: and(...whereConditions),
@@ -485,7 +441,6 @@ export const monitorRouter = createTRPCRouter({
     }),
 
   updateResponseTime: protectedProcedure
-    .meta({ track: Events.UpdateMonitor })
     .input(
       z.object({
         id: z.number(),
@@ -512,7 +467,6 @@ export const monitorRouter = createTRPCRouter({
     }),
 
   updateTags: protectedProcedure
-    .meta({ track: Events.UpdateMonitor })
     .input(z.object({ id: z.number(), tags: z.array(z.number()) }))
     .mutation(async ({ ctx, input }) => {
       const existingMonitor = await ctx.db.query.monitor.findFirst({
@@ -560,7 +514,6 @@ export const monitorRouter = createTRPCRouter({
     }),
 
   updateGeneral: protectedProcedure
-    .meta({ track: Events.UpdateMonitor })
     .input(
       z.object({
         id: z.number(),
@@ -653,7 +606,6 @@ export const monitorRouter = createTRPCRouter({
     }),
 
   updateNotifiers: protectedProcedure
-    .meta({ track: Events.UpdateMonitor })
     .input(z.object({ id: z.number(), notifiers: z.array(z.number()) }))
     .mutation(async ({ ctx, input }) => {
       const existingMonitor = await ctx.db.query.monitor.findFirst({
@@ -701,7 +653,6 @@ export const monitorRouter = createTRPCRouter({
     }),
 
   new: protectedProcedure
-    .meta({ track: Events.CreateMonitor, trackProps: ["url", "jobType"] })
     .input(
       z.object({
         name: z.string(),
@@ -725,27 +676,6 @@ export const monitorRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const limits = ctx.workspace.limits;
-
-      const res = await ctx.db
-        .select({ count: count() })
-        .from(monitor)
-        .where(
-          and(
-            eq(monitor.workspaceId, ctx.workspace.id),
-            isNull(monitor.deletedAt),
-          ),
-        )
-        .get();
-
-      // the user has reached the limits
-      if (res && res.count >= limits.monitors) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "You reached your monitor limits.",
-        });
-      }
-
       const assertions: Assertion[] = [];
       for (const a of input.assertions ?? []) {
         if (a.type === "status") {
@@ -788,9 +718,8 @@ export const monitorRouter = createTRPCRouter({
         }
       }
 
-      const selectableRegions =
-        ctx.workspace.plan === "free" ? freeFlyRegions : monitorRegions;
-      const randomRegions = ctx.workspace.plan === "free" ? 4 : 6;
+      const selectableRegions = monitorRegions;
+      const randomRegions = 6;
 
       const regions = [...selectableRegions]
         // NOTE: make sure we don't use deprecated regions
@@ -813,7 +742,7 @@ export const monitorRouter = createTRPCRouter({
           body: input.body,
           active: input.active,
           workspaceId: ctx.workspace.id,
-          periodicity: ctx.workspace.plan === "free" ? "30m" : "1m",
+          periodicity: "1m",
           regions: regions.join(","),
           assertions: serialize(assertions),
           updatedAt: new Date(),

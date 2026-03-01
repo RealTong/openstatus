@@ -14,7 +14,6 @@ const redisStore = (globalThis as Record<string, unknown>)
 function makePendingInput(): Omit<PendingAction, "id" | "createdAt"> {
   return {
     workspaceId: 1,
-    limits: {},
     botToken: "xoxb-test-token",
     channelId: "C123",
     threadTs: "1234567890.123456",
@@ -218,7 +217,6 @@ describe("confirmation-store", () => {
       const raw = JSON.stringify({
         id: "test",
         workspaceId: 1,
-        limits: makePendingInput().limits,
         botToken: "tok",
         channelId: "C1",
         threadTs: "1.1",

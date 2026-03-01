@@ -9,7 +9,6 @@ import {
   FormCardFooterInfo,
   FormCardHeader,
   FormCardTitle,
-  FormCardUpgrade,
 } from "@/components/forms/form-card";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@openstatus/ui/components/ui/button";
@@ -22,8 +21,7 @@ import {
   FormMessage,
 } from "@openstatus/ui/components/ui/form";
 import { Input } from "@openstatus/ui/components/ui/input";
-import { Lock, Plus, X } from "lucide-react";
-import NextLink from "next/link";
+import { Plus, X } from "lucide-react";
 import { useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -41,12 +39,10 @@ const schema = z.object({
 type FormValues = z.input<typeof schema>;
 
 export function FormOtel({
-  locked,
   defaultValues,
   onSubmit,
   ...props
 }: Omit<React.ComponentProps<"form">, "onSubmit"> & {
-  locked?: boolean;
   defaultValues?: FormValues;
   onSubmit: (values: FormValues) => Promise<void>;
 }) {
@@ -78,7 +74,6 @@ export function FormOtel({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(submitAction)} {...props}>
         <FormCard>
-          {locked ? <FormCardUpgrade /> : null}
           <FormCardHeader>
             <FormCardTitle>OpenTelemetry</FormCardTitle>
             <FormCardDescription>
@@ -95,7 +90,7 @@ export function FormOtel({
                   <FormControl>
                     <Input
                       placeholder="https://otel.openstatus.dev/api/v1/metrics"
-                      disabled={locked}
+
                       {...field}
                     />
                   </FormControl>
@@ -106,7 +101,6 @@ export function FormOtel({
             <FormField
               control={form.control}
               name="headers"
-              disabled={locked}
               render={({ field }) => (
                 <FormItem className="col-span-full">
                   <FormLabel>Request Headers</FormLabel>
@@ -116,7 +110,7 @@ export function FormOtel({
                         placeholder="Key"
                         className="col-span-2"
                         value={header.key}
-                        disabled={locked}
+  
                         onChange={(e) => {
                           const newHeaders = [...(field.value ?? [])];
                           newHeaders[index] = {
@@ -130,7 +124,7 @@ export function FormOtel({
                         placeholder="Value"
                         className="col-span-2"
                         value={header.value}
-                        disabled={locked}
+  
                         onChange={(e) => {
                           const newHeaders = [...(field.value ?? [])];
                           newHeaders[index] = {
@@ -159,7 +153,7 @@ export function FormOtel({
                       size="sm"
                       variant="outline"
                       type="button"
-                      disabled={locked}
+
                       onClick={() => {
                         field.onChange([
                           ...(field.value ?? []),
@@ -188,18 +182,9 @@ export function FormOtel({
               </Link>
               .
             </FormCardFooterInfo>
-            {locked ? (
-              <Button asChild>
-                <NextLink href="/settings/billing">
-                  <Lock className="size-4" />
-                  Upgrade
-                </NextLink>
-              </Button>
-            ) : (
-              <Button type="submit" disabled={isPending}>
-                {isPending ? "Submitting..." : "Submit"}
-              </Button>
-            )}
+            <Button type="submit" disabled={isPending}>
+              {isPending ? "Submitting..." : "Submit"}
+            </Button>
           </FormCardFooter>
         </FormCard>
       </form>

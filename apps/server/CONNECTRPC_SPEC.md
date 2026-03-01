@@ -277,7 +277,7 @@ export default (router: ConnectRouter) =>
 ```typescript
 // Maps internal errors to ConnectRPC codes
 // Attaches ErrorInfo details
-// Reports to Sentry (filtered for client errors)
+// Reports errors via logging
 ```
 
 ---
@@ -289,7 +289,7 @@ export default (router: ConnectRouter) =>
 - Log fields: `rpc.method`, `rpc.status_code`, `duration_ms`, `workspace_id`, `request_id`
 
 ### Error Tracking
-- Sentry integration via interceptor
+- Error logging via LogTape
 - Filter client errors (INVALID_ARGUMENT, NOT_FOUND, etc.)
 - Include request context in error reports
 
@@ -470,7 +470,7 @@ Enable both JSON and binary formats for flexibility:
 | Pagination | Offset-based |
 | Rate limiting | Existing infrastructure |
 | Operations style | Separate methods |
-| Observability | Sentry + LogTape |
+| Observability | LogTape |
 | Testing | Unit + Integration |
 | Health check | Yes, HealthService |
 | Request ID | Generated + propagated |

@@ -29,7 +29,6 @@ const schema = z.object({
     "sms",
     "webhook",
     "opsgenie",
-    "pagerduty",
     "ntfy",
     "telegram",
     "whatsapp",

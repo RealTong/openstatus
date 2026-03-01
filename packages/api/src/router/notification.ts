@@ -1,7 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import { and, count, eq, inArray } from "@openstatus/db";
+import { and, eq, inArray } from "@openstatus/db";
 import {
   NotificationDataSchema,
   googleChatDataSchema,
@@ -16,13 +16,11 @@ import {
   whatsappDataSchema,
 } from "@openstatus/db/src/schema";
 
-import { Events } from "@openstatus/analytics";
 import { SchemaError } from "@openstatus/error";
 import { sendTest as sendGoogleChatTest } from "@openstatus/notification-google-chat";
 import { sendTest as sendGrafanaTest } from "@openstatus/notification-grafana-oncall";
 import { sendTest as sendTelegramTest } from "@openstatus/notification-telegram";
 import { sendTest as sendWhatsAppTest } from "@openstatus/notification-twillio-whatsapp";
-import { redis } from "@openstatus/upstash";
 import { nanoid } from "nanoid";
 
 import {
@@ -30,6 +28,46 @@ import {
   processTelegramUpdates,
 } from "../service/telegram-updates";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
+
+/**
+ * In-memory redis-compatible store for Telegram verification tokens.
+ * Replaces the removed @openstatus/upstash dependency.
+ */
+const _tokenStore = new Map<string, { value: string; expiresAt?: number }>();
+
+function isExpired(entry: { expiresAt?: number } | undefined): boolean {
+  if (!entry) return true;
+  if (entry.expiresAt && Date.now() > entry.expiresAt) return true;
+  return false;
+}
+
+const redis = {
+  get<T = string>(key: string): Promise<T | null> {
+    const entry = _tokenStore.get(key);
+    if (!entry || isExpired(entry)) {
+      _tokenStore.delete(key);
+      return Promise.resolve(null);
+    }
+    return Promise.resolve(entry.value as unknown as T);
+  },
+  set(
+    key: string,
+    value: unknown,
+    opts?: { ex?: number },
+  ): Promise<string> {
+    const serialized = typeof value === "string" ? value : JSON.stringify(value);
+    _tokenStore.set(key, {
+      value: serialized,
+      expiresAt: opts?.ex ? Date.now() + opts.ex * 1000 : undefined,
+    });
+    return Promise.resolve("OK");
+  },
+  del(key: string): Promise<number> {
+    const existed = _tokenStore.has(key) ? 1 : 0;
+    _tokenStore.delete(key);
+    return Promise.resolve(existed);
+  },
+};
 
 export const notificationRouter = createTRPCRouter({
   list: protectedProcedure.query(async (opts) => {
@@ -59,7 +97,6 @@ export const notificationRouter = createTRPCRouter({
 
   // TODO: rename to update after migration
   updateNotifier: protectedProcedure
-    .meta({ track: Events.UpdateNotification })
     .input(
       z.object({
         id: z.number(),
@@ -142,7 +179,6 @@ export const notificationRouter = createTRPCRouter({
     }),
 
   new: protectedProcedure
-    .meta({ track: Events.CreateNotification, trackProps: ["provider"] })
     .input(
       z.object({
         provider: z.enum(notificationProvider),
@@ -155,22 +191,6 @@ export const notificationRouter = createTRPCRouter({
       }),
     )
     .mutation(async (opts) => {
-      const limits = opts.ctx.workspace.limits;
-
-      const res = await opts.ctx.db
-        .select({ count: count() })
-        .from(notification)
-        .where(eq(notification.workspaceId, opts.ctx.workspace.id))
-        .get();
-
-      // the user has reached the limits
-      if (res && res.count >= limits["notification-channels"]) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "You reached your notification limits.",
-        });
-      }
-
       const allMonitors = await opts.ctx.db.query.monitor.findMany({
         where: and(
           eq(monitor.workspaceId, opts.ctx.workspace.id),
@@ -183,33 +203,6 @@ export const notificationRouter = createTRPCRouter({
           code: "FORBIDDEN",
           message: "You don't have access to all the monitors.",
         });
-      }
-
-      const limitedProviders = [
-        "sms",
-        "pagerduty",
-        "opsgenie",
-        "grafana-oncall",
-        "whatsapp",
-      ] as const;
-      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-      if (limitedProviders.includes(opts.input.provider as any)) {
-        const isAllowed =
-          opts.ctx.workspace.limits[
-            opts.input.provider as
-              | "sms"
-              | "pagerduty"
-              | "opsgenie"
-              | "grafana-oncall"
-              | "whatsapp"
-          ];
-
-        if (!isAllowed) {
-          throw new TRPCError({
-            code: "FORBIDDEN",
-            message: "Upgrade to use the notification channel.",
-          });
-        }
       }
 
       const _data = NotificationDataSchema.safeParse(opts.input.data);
@@ -249,7 +242,6 @@ export const notificationRouter = createTRPCRouter({
     }),
 
   delete: protectedProcedure
-    .meta({ track: Events.DeleteNotification })
     .input(z.object({ id: z.number() }))
     .mutation(async (opts) => {
       await opts.ctx.db

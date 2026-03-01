@@ -9,13 +9,11 @@ import {
   FormCardFooterInfo,
   FormCardHeader,
   FormCardTitle,
-  FormCardUpgrade,
 } from "@/components/forms/form-card";
 import { useTRPC } from "@/lib/trpc/client";
 import { Badge } from "@openstatus/ui/components/ui/badge";
 import { Button } from "@openstatus/ui/components/ui/button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Lock } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 const SERVER_URL =
@@ -24,7 +22,6 @@ const SERVER_URL =
     : "http://localhost:3000";
 
 interface SlackIntegrationCardProps {
-  locked?: boolean;
   integration: {
     id: number;
     externalId: string;
@@ -33,7 +30,6 @@ interface SlackIntegrationCardProps {
 }
 
 export function SlackIntegrationCard({
-  locked,
   integration,
 }: SlackIntegrationCardProps) {
   const router = useRouter();
@@ -71,7 +67,6 @@ export function SlackIntegrationCard({
 
   return (
     <FormCard>
-      {locked ? <FormCardUpgrade /> : null}
       <FormCardHeader>
         <div className="flex items-center gap-2">
           <FormCardTitle>Slack</FormCardTitle>
@@ -106,14 +101,7 @@ export function SlackIntegrationCard({
           </Link>
           .
         </FormCardFooterInfo>
-        {locked ? (
-          <Button type="button" asChild>
-            <Link href="/settings/billing">
-              <Lock />
-              Upgrade
-            </Link>
-          </Button>
-        ) : isConnected ? (
+        {isConnected ? (
           <Button
             variant="destructive"
             size="sm"

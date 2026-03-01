@@ -142,7 +142,7 @@ async function executeAction(
   channelId: string,
   messageTs: string,
 ) {
-  const { action, workspaceId, limits } = pending;
+  const { action, workspaceId } = pending;
 
   switch (action.type) {
     case "createStatusReport": {
@@ -211,7 +211,6 @@ async function executeAction(
           status,
           message,
           date: new Date(),
-          limits,
         });
       }
 
@@ -260,7 +259,6 @@ async function executeAction(
           status,
           message,
           date: new Date(),
-          limits,
         });
       }
 
@@ -353,7 +351,6 @@ async function executeAction(
           status: "resolved",
           message,
           date: new Date(),
-          limits,
         });
       }
 

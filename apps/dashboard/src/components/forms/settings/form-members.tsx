@@ -12,16 +12,13 @@ import {
   FormCardHeader,
   FormCardSeparator,
   FormCardTitle,
-  FormCardUpgrade,
 } from "@/components/forms/form-card";
 
 import { Button } from "@openstatus/ui/components/ui/button";
-import { FormCardFooter, FormCardFooterInfo } from "../form-card";
+import { FormCardFooter } from "../form-card";
 
-import { Link } from "@/components/common/link";
 import { FormCard } from "@/components/forms/form-card";
 import { Tabs } from "@openstatus/ui/components/ui/tabs";
-import { Lock } from "lucide-react";
 
 import { DataTable as InvitationsDataTable } from "@/components/data-table/settings/invitations/data-table";
 import { DataTable as MembersDataTable } from "@/components/data-table/settings/members/data-table";
@@ -48,10 +45,8 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 export function FormMembers({
-  locked,
   onCreate,
 }: {
-  locked?: boolean;
   onCreate: (values: FormValues) => Promise<void>;
 }) {
   const form = useForm<FormValues>({
@@ -86,7 +81,6 @@ export function FormMembers({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(submitAction)}>
         <FormCard>
-          {locked ? <FormCardUpgrade /> : null}
           <FormCardHeader>
             <FormCardTitle>Team</FormCardTitle>
             <FormCardDescription>Manage your team members.</FormCardDescription>
@@ -109,7 +103,6 @@ export function FormMembers({
           <FormCardContent>
             <FormField
               control={form.control}
-              disabled={locked}
               name="email"
               render={({ field }) => (
                 <FormItem>
@@ -118,7 +111,6 @@ export function FormMembers({
                     <Input
                       type="email"
                       placeholder="Email"
-                      disabled={locked}
                       {...field}
                     />
                   </FormControl>
@@ -131,31 +123,9 @@ export function FormMembers({
             />
           </FormCardContent>
           <FormCardFooter>
-            {locked ? (
-              <>
-                <FormCardFooterInfo>
-                  This feature is available on the{" "}
-                  <Link
-                    href="https://www.openstatus.dev/changelog/team-invites"
-                    rel="noreferrer"
-                    target="_blank"
-                  >
-                    Pro plan
-                  </Link>
-                  .
-                </FormCardFooterInfo>
-                <Button type="button" size="sm" asChild>
-                  <Link href="/settings/billing">
-                    <Lock />
-                    Upgrade
-                  </Link>
-                </Button>
-              </>
-            ) : (
-              <Button type="submit" size="sm" disabled={isPending}>
-                {isPending ? "Submitting..." : "Submit"}
-              </Button>
-            )}
+            <Button type="submit" size="sm" disabled={isPending}>
+              {isPending ? "Submitting..." : "Submit"}
+            </Button>
           </FormCardFooter>
         </FormCard>
       </form>

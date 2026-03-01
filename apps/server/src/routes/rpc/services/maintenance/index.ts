@@ -16,7 +16,6 @@ import {
   pageComponent,
   pageSubscriber,
 } from "@openstatus/db/src/schema";
-import type { Limits } from "@openstatus/db/src/schema/plan/schema";
 import { EmailClient } from "@openstatus/emails";
 import type { MaintenanceService } from "@openstatus/proto/maintenance/v1";
 
@@ -207,14 +206,8 @@ async function sendMaintenanceNotification(params: {
   message: string;
   from: Date;
   to: Date;
-  limits: Limits;
 }) {
-  const { pageId, maintenanceTitle, message, from, to, limits } = params;
-
-  // Check if workspace has status-subscribers feature enabled
-  if (!limits["status-subscribers"]) {
-    return;
-  }
+  const { pageId, maintenanceTitle, message, from, to } = params;
 
   // Get page info
   const pageInfo = await db.query.page.findFirst({
@@ -354,7 +347,6 @@ export const maintenanceServiceImpl: ServiceImpl<typeof MaintenanceService> = {
         message: newMaintenance.message,
         from: fromDate,
         to: toDate,
-        limits: rpcCtx.workspace.limits,
       });
     }
 

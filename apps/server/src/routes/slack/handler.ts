@@ -215,7 +215,6 @@ async function handleConfirmation(
   } else {
     const actionId = await store({
       workspaceId: workspace.id,
-      limits: workspace.limits,
       botToken,
       channelId: channel,
       threadTs,

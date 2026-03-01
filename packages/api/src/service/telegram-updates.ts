@@ -1,4 +1,10 @@
-import type { redis } from "@openstatus/upstash";
+// ---- Redis-compatible client type -------------------------------------------
+
+type RedisClient = {
+  get<T = string>(key: string): Promise<T | null>;
+  set(key: string, value: unknown, opts?: { ex?: number }): Promise<string>;
+  del(key: string): Promise<number>;
+};
 
 // ---- Telegram API Types -----------------------------------------------------
 
@@ -199,7 +205,7 @@ export async function processTelegramUpdates(args: {
   privateChatId?: string;
   since?: number;
   botUsername: string;
-  redisClient: typeof redis;
+  redisClient: RedisClient;
 }): Promise<ValidUpdate[]> {
   const {
     updates,

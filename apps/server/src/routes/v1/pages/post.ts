@@ -10,8 +10,6 @@ import {
 } from "@openstatus/db/src/schema";
 
 import { OpenStatusApiError, openApiErrorResponses } from "@/libs/errors";
-import { trackMiddleware } from "@/libs/middlewares";
-import { Events } from "@openstatus/analytics";
 import { isNumberArray } from "../utils";
 import type { pagesApi } from "./index";
 import { PageSchema, transformPageData } from "./schema";
@@ -21,7 +19,6 @@ const postRoute = createRoute({
   tags: ["page"],
   summary: "Create a status page",
   path: "/",
-  middleware: [trackMiddleware(Events.CreatePage, ["slug"])],
   request: {
     body: {
       description: "The status page to create",
@@ -48,65 +45,12 @@ const postRoute = createRoute({
 export function registerPostPage(api: typeof pagesApi) {
   return api.openapi(postRoute, async (c) => {
     const workspaceId = c.get("workspace").id;
-    const limits = c.get("workspace").limits;
     const input = c.req.valid("json");
-
-    if (input.customDomain && !limits["custom-domain"]) {
-      throw new OpenStatusApiError({
-        code: "PAYMENT_REQUIRED",
-        message: "Upgrade for custom domains",
-      });
-    }
 
     if (input.customDomain?.toLowerCase().includes("openstatus")) {
       throw new OpenStatusApiError({
         code: "BAD_REQUEST",
         message: "Domain cannot contain 'openstatus'",
-      });
-    }
-
-    const count = (
-      await db
-        .select({ count: sql<number>`count(*)` })
-        .from(page)
-        .where(eq(page.workspaceId, workspaceId))
-        .all()
-    )[0].count;
-
-    if (count >= limits["status-pages"]) {
-      throw new OpenStatusApiError({
-        code: "PAYMENT_REQUIRED",
-        message: "Upgrade for more status pages",
-      });
-    }
-
-    if (
-      !limits["password-protection"] &&
-      (input?.passwordProtected || input?.password)
-    ) {
-      throw new OpenStatusApiError({
-        code: "PAYMENT_REQUIRED",
-        message: "Upgrade for password protection",
-      });
-    }
-
-    if (
-      !limits["password-protection"] &&
-      (input?.accessType === "password" || input?.password)
-    ) {
-      throw new OpenStatusApiError({
-        code: "PAYMENT_REQUIRED",
-        message: "Upgrade for password protection",
-      });
-    }
-
-    if (
-      !limits["email-domain-protection"] &&
-      (input?.accessType === "email-domain" || input?.authEmailDomains?.length)
-    ) {
-      throw new OpenStatusApiError({
-        code: "PAYMENT_REQUIRED",
-        message: "Upgrade for email domain protection",
       });
     }
 

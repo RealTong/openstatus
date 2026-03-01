@@ -11,7 +11,6 @@ import {
   selectStatusReportSchema,
   selectStatusReportUpdateSchema,
 } from "./status_reports";
-import { workspacePlanSchema } from "./workspaces";
 
 // TODO: create a 'public-status' schema with all the different types and validations
 
@@ -66,7 +65,7 @@ export const legacy_selectPublicPageSchemaWithRelation = selectPageSchema
     statusReports: z.array(selectStatusReportPageSchema).prefault([]),
     incidents: z.array(selectIncidentSchema).prefault([]),
     maintenances: z.array(selectMaintenancePageSchema).prefault([]),
-    workspacePlan: workspacePlanSchema
+    workspacePlan: z.string()
       .nullable()
       .prefault("free")
       .transform((val) => val ?? "free"),
@@ -160,7 +159,7 @@ export const selectPublicPageLightSchemaWithRelation = selectPageSchema
     statusReports: z.array(selectStatusReportPageSchema).prefault([]),
     incidents: z.array(selectIncidentSchema).prefault([]),
     maintenances: z.array(selectMaintenancePageSchema).prefault([]),
-    workspacePlan: workspacePlanSchema
+    workspacePlan: z.string()
       .nullable()
       .prefault("free")
       .transform((val) => val ?? "free"),
@@ -185,7 +184,7 @@ export const selectPublicPageSchemaWithRelation = selectPageSchema.extend({
   incidents: z.array(selectIncidentSchema),
   maintenances: z.array(selectMaintenancePageSchema),
   status: z.enum(["success", "degraded", "error", "info"]).prefault("success"),
-  workspacePlan: workspacePlanSchema
+  workspacePlan: z.string()
     .nullable()
     .prefault("free")
     .transform((val) => val ?? "free"),

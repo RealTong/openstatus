@@ -2,7 +2,7 @@ import { env } from "@/env";
 import { getCheckerPayload, getCheckerUrl } from "@/libs/checker";
 import { tb } from "@/libs/clients";
 import type { ServiceImpl } from "@connectrpc/connect";
-import { and, db, eq, gte, inArray, isNull, sql } from "@openstatus/db";
+import { and, db, eq, inArray, isNull, sql } from "@openstatus/db";
 import { monitor, monitorRun } from "@openstatus/db/src/schema";
 import { monitorStatusTable } from "@openstatus/db/src/schema/monitor_status/monitor_status";
 import { selectMonitorSchema } from "@openstatus/db/src/schema/monitors/validation";
@@ -45,9 +45,7 @@ import {
   monitorRunCreateFailedError,
   monitorTypeMismatchError,
   monitorUpdateFailedError,
-  rateLimitExceededError,
 } from "./errors";
-import { checkMonitorLimits } from "./limits";
 import {
   getCommonDbValues,
   getCommonDbValuesForUpdate,
@@ -136,7 +134,6 @@ export const monitorServiceImpl: ServiceImpl<typeof MonitorService> = {
   async createHTTPMonitor(req, ctx) {
     const rpcCtx = getRpcContext(ctx);
     const workspaceId = rpcCtx.workspace.id;
-    const limits = rpcCtx.workspace.limits;
 
     if (!req.monitor) {
       throw monitorRequiredError();
@@ -146,9 +143,6 @@ export const monitorServiceImpl: ServiceImpl<typeof MonitorService> = {
 
     // Validate required fields (proto validation handles name, url, periodicity)
     validateCommonMonitorFields(mon);
-
-    // Check workspace limits
-    await checkMonitorLimits(workspaceId, limits, mon.periodicity, mon.regions);
 
     // Get common DB values
     const commonValues = getCommonDbValues(mon);
@@ -197,7 +191,6 @@ export const monitorServiceImpl: ServiceImpl<typeof MonitorService> = {
   async createTCPMonitor(req, ctx) {
     const rpcCtx = getRpcContext(ctx);
     const workspaceId = rpcCtx.workspace.id;
-    const limits = rpcCtx.workspace.limits;
 
     if (!req.monitor) {
       throw monitorRequiredError();
@@ -207,9 +200,6 @@ export const monitorServiceImpl: ServiceImpl<typeof MonitorService> = {
 
     // Validate required fields (proto validation handles name, uri, periodicity)
     validateCommonMonitorFields(mon);
-
-    // Check workspace limits
-    await checkMonitorLimits(workspaceId, limits, mon.periodicity, mon.regions);
 
     // Get common DB values
     const commonValues = getCommonDbValues(mon);
@@ -244,7 +234,6 @@ export const monitorServiceImpl: ServiceImpl<typeof MonitorService> = {
   async createDNSMonitor(req, ctx) {
     const rpcCtx = getRpcContext(ctx);
     const workspaceId = rpcCtx.workspace.id;
-    const limits = rpcCtx.workspace.limits;
 
     if (!req.monitor) {
       throw monitorRequiredError();
@@ -254,9 +243,6 @@ export const monitorServiceImpl: ServiceImpl<typeof MonitorService> = {
 
     // Validate required fields (proto validation handles name, uri, periodicity)
     validateCommonMonitorFields(mon);
-
-    // Check workspace limits
-    await checkMonitorLimits(workspaceId, limits, mon.periodicity, mon.regions);
 
     // Get common DB values
     const commonValues = getCommonDbValues(mon);
@@ -295,7 +281,6 @@ export const monitorServiceImpl: ServiceImpl<typeof MonitorService> = {
   async updateHTTPMonitor(req, ctx) {
     const rpcCtx = getRpcContext(ctx);
     const workspaceId = rpcCtx.workspace.id;
-    const limits = rpcCtx.workspace.limits;
 
     const dbMon = await validateAndGetMonitor(req.id, workspaceId, "http");
 
@@ -312,16 +297,6 @@ export const monitorServiceImpl: ServiceImpl<typeof MonitorService> = {
 
     // Validate regions if provided
     validateCommonMonitorFields(mon);
-
-    // Check workspace limits if periodicity or regions are changing
-    if (mon.periodicity || (mon.regions && mon.regions.length > 0)) {
-      await checkMonitorLimits(
-        workspaceId,
-        limits,
-        mon.periodicity || undefined,
-        mon.regions && mon.regions.length > 0 ? mon.regions : undefined,
-      );
-    }
 
     // Build update values - only include fields that are provided
     const updateValues: Record<string, unknown> =
@@ -372,7 +347,6 @@ export const monitorServiceImpl: ServiceImpl<typeof MonitorService> = {
   async updateTCPMonitor(req, ctx) {
     const rpcCtx = getRpcContext(ctx);
     const workspaceId = rpcCtx.workspace.id;
-    const limits = rpcCtx.workspace.limits;
 
     const dbMon = await validateAndGetMonitor(req.id, workspaceId, "tcp");
 
@@ -389,16 +363,6 @@ export const monitorServiceImpl: ServiceImpl<typeof MonitorService> = {
 
     // Validate regions if provided
     validateCommonMonitorFields(mon);
-
-    // Check workspace limits if periodicity or regions are changing
-    if (mon.periodicity || (mon.regions && mon.regions.length > 0)) {
-      await checkMonitorLimits(
-        workspaceId,
-        limits,
-        mon.periodicity || undefined,
-        mon.regions && mon.regions.length > 0 ? mon.regions : undefined,
-      );
-    }
 
     // Build update values - only include fields that are provided
     const updateValues: Record<string, unknown> =
@@ -420,7 +384,6 @@ export const monitorServiceImpl: ServiceImpl<typeof MonitorService> = {
   async updateDNSMonitor(req, ctx) {
     const rpcCtx = getRpcContext(ctx);
     const workspaceId = rpcCtx.workspace.id;
-    const limits = rpcCtx.workspace.limits;
 
     const dbMon = await validateAndGetMonitor(req.id, workspaceId, "dns");
 
@@ -437,16 +400,6 @@ export const monitorServiceImpl: ServiceImpl<typeof MonitorService> = {
 
     // Validate regions if provided
     validateCommonMonitorFields(mon);
-
-    // Check workspace limits if periodicity or regions are changing
-    if (mon.periodicity || (mon.regions && mon.regions.length > 0)) {
-      await checkMonitorLimits(
-        workspaceId,
-        limits,
-        mon.periodicity || undefined,
-        mon.regions && mon.regions.length > 0 ? mon.regions : undefined,
-      );
-    }
 
     // Build update values - only include fields that are provided
     const updateValues: Record<string, unknown> =
@@ -473,25 +426,6 @@ export const monitorServiceImpl: ServiceImpl<typeof MonitorService> = {
   async triggerMonitor(req, ctx) {
     const rpcCtx = getRpcContext(ctx);
     const workspaceId = rpcCtx.workspace.id;
-    const limits = rpcCtx.workspace.limits;
-
-    // Check rate limits
-    const lastMonth = new Date().setMonth(new Date().getMonth() - 1);
-    const countResult = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(monitorRun)
-      .where(
-        and(
-          eq(monitorRun.workspaceId, workspaceId),
-          gte(monitorRun.createdAt, new Date(lastMonth)),
-        ),
-      )
-      .get();
-
-    const count = countResult?.count ?? 0;
-    if (count >= limits["synthetic-checks"]) {
-      throw rateLimitExceededError(limits["synthetic-checks"], count);
-    }
 
     // Get the monitor
     const dbMon = await getMonitorById(Number(req.id), workspaceId);

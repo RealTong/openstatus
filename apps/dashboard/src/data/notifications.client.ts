@@ -4,7 +4,6 @@ import { FormGoogleChat } from "@/components/forms/notifications/form-google-cha
 import { FormGrafanaOncall } from "@/components/forms/notifications/form-grafana-oncall";
 import { FormNtfy } from "@/components/forms/notifications/form-ntfy";
 import { FormOpsGenie } from "@/components/forms/notifications/form-opsgenie";
-import { FormPagerDuty } from "@/components/forms/notifications/form-pagerduty";
 import { FormSlack } from "@/components/forms/notifications/form-slack";
 import { FormSms } from "@/components/forms/notifications/form-sms";
 import { FormTelegram } from "@/components/forms/notifications/form-telegram";
@@ -18,13 +17,11 @@ import {
   WhatsappIcon,
 } from "@openstatus/icons";
 import { OpsGenieIcon } from "@openstatus/icons";
-import { PagerDutyIcon } from "@openstatus/icons";
 import { SlackIcon } from "@openstatus/icons";
 import { sendTestDiscordMessage as sendTestDiscord } from "@openstatus/notification-discord";
 import { sendTest as sendTestGrafanaOncall } from "@openstatus/notification-grafana-oncall";
 import { sendTest as sendTestNtfy } from "@openstatus/notification-ntfy";
 import { sendTest as sendTestOpsGenie } from "@openstatus/notification-opsgenie";
-import { sendTest as sendTestPagerDuty } from "@openstatus/notification-pagerduty";
 import { sendTestSlackMessage as sendTestSlack } from "@openstatus/notification-slack";
 import { sendTest as sendTestTelegram } from "@openstatus/notification-telegram";
 import { sendTest as sendWhatsAppTest } from "@openstatus/notification-twillio-whatsapp";
@@ -116,12 +113,6 @@ export const config = {
     label: "Grafana OnCall",
     form: FormGrafanaOncall,
     sendTest: sendTestGrafanaOncall,
-  },
-  pagerduty: {
-    icon: PagerDutyIcon,
-    label: "PagerDuty",
-    form: FormPagerDuty,
-    sendTest: sendTestPagerDuty,
   },
   ntfy: {
     icon: BellIcon, // TODO: add svg icon

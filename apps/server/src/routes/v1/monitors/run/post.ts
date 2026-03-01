@@ -45,28 +45,7 @@ export function registerRunMonitor(api: typeof monitorsApi) {
   return api.openapi(postMonitor, async (c) => {
     const workspaceId = c.get("workspace").id;
     const { id } = c.req.valid("param");
-    const limits = c.get("workspace").limits;
     const { "no-wait": noWait } = c.req.valid("query");
-    const lastMonth = new Date().setMonth(new Date().getMonth() - 1);
-
-    const count = (
-      await db
-        .select({ count: sql<number>`count(*)` })
-        .from(monitorRun)
-        .where(
-          and(
-            eq(monitorRun.workspaceId, workspaceId),
-            gte(monitorRun.createdAt, new Date(lastMonth)),
-          ),
-        )
-        .all()
-    )[0].count;
-
-    if (count >= limits["synthetic-checks"]) {
-      throw new HTTPException(403, {
-        message: "Upgrade for more checks",
-      });
-    }
 
     const monitorData = await db
       .select()

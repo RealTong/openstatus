@@ -9,7 +9,6 @@ import {
   FormCardHeader,
   FormCardSeparator,
   FormCardTitle,
-  FormCardUpgrade,
 } from "@/components/forms/form-card";
 
 import { Label } from "@openstatus/ui/components/ui/label";
@@ -18,7 +17,6 @@ import { Label } from "@openstatus/ui/components/ui/label";
 import { InputWithAddons } from "@/components/common/input-with-addons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@openstatus/ui/components/ui/button";
-import { Lock } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -43,12 +41,10 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 export function FormCustomDomain({
-  locked,
   defaultValues,
   onSubmit,
   ...props
 }: Omit<React.ComponentProps<"form">, "onSubmit"> & {
-  locked?: boolean;
   defaultValues?: FormValues;
   onSubmit: (values: FormValues) => Promise<void>;
 }) {
@@ -94,7 +90,6 @@ export function FormCustomDomain({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(submitAction)} {...props}>
         <FormCard>
-          {locked ? <FormCardUpgrade /> : null}
           <FormCardHeader>
             <FormCardTitle>Custom Domain</FormCardTitle>
             <FormCardDescription>
@@ -111,7 +106,6 @@ export function FormCustomDomain({
                   <InputWithAddons
                     placeholder="status.openstatus.dev"
                     leading="https://"
-                    disabled={locked}
                     {...field}
                   />
                   <FormMessage />
@@ -139,29 +133,20 @@ export function FormCustomDomain({
               </Link>
               .
             </FormCardFooterInfo>
-            {locked ? (
-              <Button type="button" asChild>
-                <Link href="/settings/billing">
-                  <Lock />
-                  Upgrade
-                </Link>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="ghost"
+                disabled={isPending || isLoading}
+                onClick={refresh}
+                className="hidden sm:block"
+              >
+                {isLoading ? "Refreshing..." : "Refresh Configuration"}
               </Button>
-            ) : (
-              <div className="flex items-center gap-2">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  disabled={isPending || isLoading}
-                  onClick={refresh}
-                  className="hidden sm:block"
-                >
-                  {isLoading ? "Refreshing..." : "Refresh Configuration"}
-                </Button>
-                <Button type="submit" disabled={isPending}>
-                  {isPending ? "Submitting..." : "Submit"}
-                </Button>
-              </div>
-            )}
+              <Button type="submit" disabled={isPending}>
+                {isPending ? "Submitting..." : "Submit"}
+              </Button>
+            </div>
           </FormCardFooter>
         </FormCard>
       </form>

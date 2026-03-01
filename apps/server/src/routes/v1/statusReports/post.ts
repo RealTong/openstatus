@@ -62,7 +62,6 @@ export function registerPostStatusReport(api: typeof statusReportsApi) {
   return api.openapi(postRoute, async (c) => {
     const input = c.req.valid("json");
     const workspaceId = c.get("workspace").id;
-    const limits = c.get("workspace").limits;
 
     if (input.monitorIds?.length) {
       const _monitors = await db
@@ -157,7 +156,7 @@ export function registerPostStatusReport(api: typeof statusReportsApi) {
       }
     }
 
-    if (limits["status-subscribers"] && _newStatusReport.pageId) {
+    if (_newStatusReport.pageId) {
       const subscribers = await db
         .select()
         .from(pageSubscriber)

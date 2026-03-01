@@ -74,11 +74,6 @@ export default function Page() {
                 email: values.email,
               });
             }}
-            locked={
-              (typeof workspace.limits.members === "number" &&
-                workspace.limits.members === 1) ||
-              workspace.limits.members !== "Unlimited"
-            }
           />
           <FormApiKey />
         </FormCardGroup>

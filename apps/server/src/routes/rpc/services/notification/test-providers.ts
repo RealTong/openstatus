@@ -3,7 +3,6 @@ import { sendTest as sendGoogleChatTest } from "@openstatus/notification-google-
 import { sendTest as sendGrafanaTest } from "@openstatus/notification-grafana-oncall";
 import { sendTest as sendNtfyTest } from "@openstatus/notification-ntfy";
 import { sendTest as sendOpsgenieTest } from "@openstatus/notification-opsgenie";
-import { sendTest as sendPagerDutyTest } from "@openstatus/notification-pagerduty";
 import { sendTestSlackMessage } from "@openstatus/notification-slack";
 import { sendTest as sendTelegramTest } from "@openstatus/notification-telegram";
 import { sendTest as sendWhatsAppTest } from "@openstatus/notification-twillio-whatsapp";
@@ -107,17 +106,8 @@ export async function sendTestNotification(
         return { success: true };
       }
 
-      case NotificationProvider.PAGERDUTY: {
-        if (data.data.case !== "pagerduty") {
-          throw invalidNotificationDataError(
-            "Expected pagerduty data for PagerDuty provider",
-          );
-        }
-        await sendPagerDutyTest({
-          integrationKey: data.data.value.integrationKey,
-        });
-        return { success: true };
-      }
+      case NotificationProvider.PAGERDUTY:
+        throw providerNotSupportedError("PagerDuty");
 
       case NotificationProvider.OPSGENIE: {
         if (data.data.case !== "opsgenie") {

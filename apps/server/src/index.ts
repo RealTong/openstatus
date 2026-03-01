@@ -1,6 +1,5 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 
-import { sentry } from "@hono/sentry";
 import {
   configure,
   // configureSync,
@@ -9,12 +8,9 @@ import {
   jsonLinesFormatter,
   withContext,
 } from "@logtape/logtape";
-import { getOpenTelemetrySink } from "@logtape/otel";
 import { Hono } from "hono";
 import { showRoutes } from "hono/dev";
 
-import { resourceFromAttributes } from "@opentelemetry/resources";
-import { ATTR_DEPLOYMENT_ENVIRONMENT_NAME } from "@opentelemetry/semantic-conventions/incubating";
 import { Scalar } from "@scalar/hono-api-reference";
 import { prettyJSON } from "hono/pretty-json";
 import { requestId } from "hono/request-id";
@@ -46,24 +42,9 @@ const otelLogger = getLogger("api-server-otel");
  * This allows tests to import `app` immediately.
  */
 
-const defaultLogger = getOpenTelemetrySink({
-  serviceName: "openstatus-server",
-  otlpExporterConfig: {
-    url: "https://eu-central-1.aws.edge.axiom.co/v1/logs",
-    headers: {
-      Authorization: `Bearer ${env.AXIOM_TOKEN}`,
-      "X-Axiom-Dataset": env.AXIOM_DATASET,
-    },
-  },
-  additionalResource: resourceFromAttributes({
-    [ATTR_DEPLOYMENT_ENVIRONMENT_NAME]: env.NODE_ENV,
-  }),
-});
-
 await configure({
   sinks: {
     console: getConsoleSink({ formatter: jsonLinesFormatter }),
-    otel: defaultLogger,
   },
   loggers: [
     {
@@ -74,7 +55,7 @@ await configure({
     {
       category: "api-server-otel",
       lowestLevel: "info",
-      sinks: ["otel"],
+      sinks: ["console"],
     },
   ],
   contextLocalStorage: new AsyncLocalStorage(),
@@ -96,7 +77,6 @@ function shouldSample(event: Record<string, any>): boolean {
 /**
  * Middleware
  */
-app.use("*", sentry({ dsn: process.env.SENTRY_DSN }));
 app.use("*", requestId());
 app.use("*", prettyJSON());
 

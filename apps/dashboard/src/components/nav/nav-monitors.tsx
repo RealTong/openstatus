@@ -5,7 +5,6 @@ import { useState } from "react";
 import { MoreHorizontal, Plus } from "lucide-react";
 
 import { ExportCodeDialog } from "@/components/dialogs/export-code";
-import { UpgradeDialog } from "@/components/dialogs/upgrade";
 import { QuickActions } from "@/components/dropdowns/quick-actions";
 import {
   SidebarGroup,
@@ -42,7 +41,6 @@ export const STATUS = {
 
 export function NavMonitors() {
   const [openDialog, setOpenDialog] = useState(false);
-  const [openUpgradeDialog, setOpenUpgradeDialog] = useState(false);
   const { isMobile, setOpenMobile } = useSidebar();
   const trpc = useTRPC();
   const router = useRouter();
@@ -78,8 +76,6 @@ export function NavMonitors() {
 
   if (!workspace || !monitors) return null;
 
-  const limitReached = monitors.length >= workspace.limits.monitors;
-
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
       <SidebarGroupLabel
@@ -99,13 +95,8 @@ export function NavMonitors() {
             <Tooltip>
               <TooltipTrigger asChild>
                 <SidebarMenuAction
-                  data-limited={limitReached}
-                  className="relative top-0 right-0 border data-[limited=true]:opacity-80"
+                  className="relative top-0 right-0 border"
                   onClick={() => {
-                    if (limitReached) {
-                      setOpenUpgradeDialog(true);
-                      return;
-                    }
                     router.push("/monitors/create");
                     setOpenMobile(false);
                   }}
@@ -115,7 +106,7 @@ export function NavMonitors() {
                 </SidebarMenuAction>
               </TooltipTrigger>
               <TooltipContent side="right" align="center">
-                {limitReached ? "Upgrade" : "Create Monitor"}
+                Create Monitor
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -218,10 +209,6 @@ export function NavMonitors() {
         )}
       </SidebarMenu>
       <ExportCodeDialog open={openDialog} onOpenChange={setOpenDialog} />
-      <UpgradeDialog
-        open={openUpgradeDialog}
-        onOpenChange={setOpenUpgradeDialog}
-      />
     </SidebarGroup>
   );
 }

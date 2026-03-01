@@ -27,11 +27,6 @@ import {
   notificationNotFoundError,
   notificationUpdateFailedError,
 } from "./errors";
-import {
-  checkNotificationLimit,
-  checkProviderAllowed,
-  getNotificationLimitInfo,
-} from "./limits";
 import { sendTestNotification } from "./test-providers";
 
 // Type that works with both db instance and transaction
@@ -150,13 +145,6 @@ export const notificationServiceImpl: ServiceImpl<typeof NotificationService> =
     async createNotification(req, ctx) {
       const rpcCtx = getRpcContext(ctx);
       const workspaceId = rpcCtx.workspace.id;
-      const limits = rpcCtx.workspace.limits;
-
-      // Check notification limit
-      await checkNotificationLimit(workspaceId, limits);
-
-      // Check if provider is allowed for this plan
-      checkProviderAllowed(req.provider, limits);
 
       // Validate provider-data consistency
       const validationError = validateProviderDataConsistency(
@@ -393,12 +381,10 @@ export const notificationServiceImpl: ServiceImpl<typeof NotificationService> =
     },
 
     async checkNotificationLimit(_req, ctx) {
-      const rpcCtx = getRpcContext(ctx);
-      const workspaceId = rpcCtx.workspace.id;
-      const limits = rpcCtx.workspace.limits;
-
-      const info = await getNotificationLimitInfo(workspaceId, limits);
-
-      return info;
+      return {
+        currentCount: 0,
+        maxCount: 0,
+        limitReached: false,
+      };
     },
   };

@@ -1,12 +1,10 @@
 import type { DefaultSession } from "next-auth";
 import NextAuth from "next-auth";
 
-import { Events, setupAnalytics } from "@openstatus/analytics";
 import { db, eq } from "@openstatus/db";
 import { user } from "@openstatus/db/src/schema";
 
 import { WelcomeEmail, sendEmail } from "@openstatus/emails";
-import { headers } from "next/headers";
 import { adapter } from "./adapter";
 import { GitHubProvider, GoogleProvider, ResendProvider } from "./providers";
 
@@ -84,34 +82,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (params.user.tenantId) return;
 
       await sendEmail({
-        from: "Thibault from OpenStatus <thibault@openstatus.dev>",
+        from: "OpenStatus <noreply@openstatus.dev>",
         subject: "Welcome to OpenStatus.",
         to: [params.user.email],
         react: WelcomeEmail(),
       });
-
-      const analytics = await setupAnalytics({
-        userId: `usr_${params.user.id}`,
-        email: params.user.email,
-        location: (await headers()).get("x-forwarded-for") ?? undefined,
-        userAgent: (await headers()).get("user-agent") ?? undefined,
-      });
-
-      await analytics.track(Events.CreateUser);
-    },
-
-    async signIn(params) {
-      if (params.isNewUser) return;
-      if (!params.user.id || !params.user.email) return;
-
-      const analytics = await setupAnalytics({
-        userId: `usr_${params.user.id}`,
-        email: params.user.email,
-        location: (await headers()).get("x-forwarded-for") ?? undefined,
-        userAgent: (await headers()).get("user-agent") ?? undefined,
-      });
-
-      await analytics.track(Events.SignInUser);
     },
   },
   pages: {

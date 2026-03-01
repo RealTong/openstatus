@@ -34,7 +34,6 @@ export function FormMonitorUpdate() {
   const { data: notifications } = useQuery(
     trpc.notification.list.queryOptions(),
   );
-  const { data: workspace } = useQuery(trpc.workspace.get.queryOptions());
   const updateRetryMutation = useMutation(
     trpc.monitor.updateRetry.mutationOptions({
       onSuccess: () => refetch(),
@@ -108,7 +107,6 @@ export function FormMonitorUpdate() {
     !monitor ||
     !statusPages ||
     !notifications ||
-    !workspace ||
     !privateLocations
   )
     return null;
@@ -222,7 +220,6 @@ export function FormMonitorUpdate() {
         }
       />
       <FormOtel
-        locked={workspace.limits.otel === false}
         defaultValues={{
           endpoint: monitor.otelEndpoint ?? "",
           headers: monitor.otelHeaders ?? [],

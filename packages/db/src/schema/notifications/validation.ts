@@ -56,7 +56,6 @@ export const phoneDataSchema = z.object({ sms: phoneSchema });
 export const slackDataSchema = z.object({ slack: urlSchema });
 export const discordDataSchema = z.object({ discord: urlSchema });
 export const googleChatDataSchema = z.object({ "google-chat": urlSchema });
-export const pagerdutyDataSchema = z.object({ pagerduty: z.string() });
 export const opsgenieDataSchema = z.object({
   opsgenie: z.object({
     apiKey: z.string(),
@@ -83,7 +82,6 @@ export const NotificationDataSchema = z.union([
   grafanaOncallDataSchema,
   ntfyDataSchema,
   opsgenieDataSchema,
-  pagerdutyDataSchema,
   phoneDataSchema,
   telegramDataSchema,
   slackDataSchema,
@@ -123,12 +121,6 @@ export const InsertNotificationWithDataSchema = z.discriminatedUnion(
       z.object({
         provider: z.literal("ntfy"),
         data: ntfyDataSchema,
-      }).shape,
-    ),
-    insertNotificationSchema.extend(
-      z.object({
-        provider: z.literal("pagerduty"),
-        data: pagerdutyDataSchema,
       }).shape,
     ),
     insertNotificationSchema.extend(

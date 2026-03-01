@@ -7,14 +7,12 @@ import {
   selectMonitorSchema,
 } from "@openstatus/db/src/schema";
 
-import { Events } from "@openstatus/analytics";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { getPeriodDate, periods } from "./utils";
 
 export const incidentRouter = createTRPCRouter({
   delete: protectedProcedure
-    .meta({ track: Events.DeleteIncident })
     .input(z.object({ id: z.number() }))
     .mutation(async (opts) => {
       const incidentToDelete = await opts.ctx.db
@@ -80,7 +78,6 @@ export const incidentRouter = createTRPCRouter({
     }),
 
   acknowledge: protectedProcedure
-    .meta({ track: Events.AcknowledgeIncident })
     .input(z.object({ id: z.number() }))
     .mutation(async (opts) => {
       const currentIncident = await opts.ctx.db
@@ -122,7 +119,6 @@ export const incidentRouter = createTRPCRouter({
     }),
 
   resolve: protectedProcedure
-    .meta({ track: Events.ResolveIncident })
     .input(z.object({ id: z.number() }))
     .mutation(async (opts) => {
       const currentIncident = await opts.ctx.db

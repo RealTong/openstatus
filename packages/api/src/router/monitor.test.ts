@@ -6,7 +6,6 @@ import {
   privateLocation,
   privateLocationToMonitors,
 } from "@openstatus/db/src/schema";
-import { allPlans } from "@openstatus/db/src/schema/plan/config";
 import { TRPCError } from "@trpc/server";
 
 import { edgeRouter } from "../edge";
@@ -144,7 +143,7 @@ test("monitor.updateSchedulingRegions rejects monitor from another workspace", a
     req: undefined,
     session: { user: { id: "1" } },
     // @ts-expect-error - minimal workspace for test
-    workspace: { id: 1, limits: allPlans.team.limits },
+    workspace: { id: 1 },
   });
   const caller = edgeRouter.createCaller(ctx);
 
@@ -179,7 +178,7 @@ test("monitor.updateSchedulingRegions succeeds for own workspace monitor", async
     req: undefined,
     session: { user: { id: "1" } },
     // @ts-expect-error - minimal workspace for test
-    workspace: { id: 1, limits: allPlans.team.limits },
+    workspace: { id: 1 },
   });
   const caller = edgeRouter.createCaller(ctx);
 
@@ -197,7 +196,7 @@ test("monitor.updateSchedulingRegions rejects privateLocations from another work
     req: undefined,
     session: { user: { id: "1" } },
     // @ts-expect-error - minimal workspace for test
-    workspace: { id: 1, limits: allPlans.team.limits },
+    workspace: { id: 1 },
   });
   const caller = edgeRouter.createCaller(ctx);
 
@@ -220,7 +219,7 @@ test("monitor.updateSchedulingRegions succeeds with own workspace privateLocatio
     req: undefined,
     session: { user: { id: "1" } },
     // @ts-expect-error - minimal workspace for test
-    workspace: { id: 1, limits: allPlans.team.limits },
+    workspace: { id: 1 },
   });
   const caller = edgeRouter.createCaller(ctx);
 

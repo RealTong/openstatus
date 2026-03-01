@@ -1,14 +1,8 @@
 import { TRPCError, initTRPC } from "@trpc/server";
-import { type NextRequest, after } from "next/server";
+import type { NextRequest } from "next/server";
 import superjson from "superjson";
 import { ZodError, treeifyError } from "zod";
 
-import {
-  type EventProps,
-  type IdentifyProps,
-  parseInputToProps,
-  setupAnalytics,
-} from "@openstatus/analytics";
 import { db, eq, schema } from "@openstatus/db";
 import type { User, Workspace } from "@openstatus/db/src/schema";
 
@@ -34,16 +28,9 @@ type CreateContextOptions = {
   workspace?: Workspace | null;
   user?: User | null;
   req?: NextRequest;
-  metadata?: {
-    userAgent?: string;
-    location?: string;
-  };
 };
 
-type Meta = {
-  track?: EventProps;
-  trackProps?: string[];
-};
+type Meta = {};
 
 /**
  * This helper generates the "internals" for a tRPC context. If you need to use
@@ -81,13 +68,6 @@ export const createTRPCContext = async (opts: {
     workspace,
     user,
     req: opts.req,
-    metadata: {
-      userAgent: opts.req.headers.get("user-agent") ?? undefined,
-      location:
-        opts.req.headers.get("x-forwarded-for") ??
-        process.env.VERCEL_REGION ??
-        undefined,
-    },
   });
 };
 
@@ -210,47 +190,7 @@ const enforceUserIsAuthed = t.middleware(async (opts) => {
   const user = schema.selectUserSchema.parse(userProps);
   const workspace = schema.selectWorkspaceSchema.parse(activeWorkspace);
 
-  const result = await opts.next({ ctx: { ...ctx, user, workspace } });
-
-  if (process.env.NODE_ENV === "test") {
-    return result;
-  }
-
-  // REMINDER: We only track the event if the request was successful
-  if (!result.ok) {
-    return result;
-  }
-
-  // REMINDER: We only track the event if the request was successful
-  // REMINDER: We are not blocking the request
-  after(async () => {
-    const { ctx, meta, getRawInput } = opts;
-
-    if (meta?.track) {
-      let identify: IdentifyProps = {
-        userAgent: ctx.metadata?.userAgent,
-        location: ctx.metadata?.location,
-      };
-
-      if (user && workspace) {
-        identify = {
-          ...identify,
-          userId: `usr_${user.id}`,
-          email: user.email || undefined,
-          workspaceId: String(workspace.id),
-          plan: workspace.plan,
-        };
-      }
-
-      const analytics = await setupAnalytics(identify);
-      const rawInput = await getRawInput();
-      const additionalProps = parseInputToProps(rawInput, meta.trackProps);
-
-      await analytics.track({ ...meta.track, ...additionalProps });
-    }
-  });
-
-  return result;
+  return opts.next({ ctx: { ...ctx, user, workspace } });
 });
 
 /**
