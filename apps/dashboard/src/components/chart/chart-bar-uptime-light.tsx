@@ -42,7 +42,7 @@ export function ChartBarUptimeLight({
   const trpc = useTRPC();
 
   const { data: uptime, isLoading } = useQuery(
-    trpc.tinybird.uptime.queryOptions({
+    trpc.monitorData.uptime.queryOptions({
       interval: 60 * 24,
       //   fromDate: startOfDay(subDays(new Date(), 7)).toISOString(), // FIXME:
       period: "7d",

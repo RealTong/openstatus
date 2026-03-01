@@ -136,7 +136,7 @@ func TestParseAssertions_MultipleAssertions(t *testing.T) {
 }
 
 func TestMonitors_Unauthenticated(t *testing.T) {
-	h := server.NewPrivateLocationServer(testDB(), getTBClient(context.Background()))
+	h := server.NewPrivateLocationServer(testDB(), getDBWriter())
 
 	req := connect.NewRequest(&private_locationv1.MonitorsRequest{})
 	// No token header
@@ -153,7 +153,7 @@ func TestMonitors_Unauthenticated(t *testing.T) {
 }
 
 func TestMonitors_InvalidToken(t *testing.T) {
-	h := server.NewPrivateLocationServer(testDB(), getTBClient(context.Background()))
+	h := server.NewPrivateLocationServer(testDB(), getDBWriter())
 
 	req := connect.NewRequest(&private_locationv1.MonitorsRequest{})
 	req.Header().Set("openstatus-token", "invalid-token")
@@ -177,7 +177,7 @@ func TestMonitors_InvalidToken(t *testing.T) {
 }
 
 func TestMonitors_ReturnsHTTPTCPAndDNSMonitors(t *testing.T) {
-	h := server.NewPrivateLocationServer(testDB(), getTBClient(context.Background()))
+	h := server.NewPrivateLocationServer(testDB(), getDBWriter())
 
 	req := connect.NewRequest(&private_locationv1.MonitorsRequest{})
 	req.Header().Set("openstatus-token", "my-secret-key")
@@ -207,7 +207,7 @@ func TestMonitors_ReturnsHTTPTCPAndDNSMonitors(t *testing.T) {
 }
 
 func TestMonitors_HTTPMonitorFields(t *testing.T) {
-	h := server.NewPrivateLocationServer(testDB(), getTBClient(context.Background()))
+	h := server.NewPrivateLocationServer(testDB(), getDBWriter())
 
 	req := connect.NewRequest(&private_locationv1.MonitorsRequest{})
 	req.Header().Set("openstatus-token", "my-secret-key")
@@ -239,7 +239,7 @@ func TestMonitors_HTTPMonitorFields(t *testing.T) {
 }
 
 func TestMonitors_TCPMonitorFields(t *testing.T) {
-	h := server.NewPrivateLocationServer(testDB(), getTBClient(context.Background()))
+	h := server.NewPrivateLocationServer(testDB(), getDBWriter())
 
 	req := connect.NewRequest(&private_locationv1.MonitorsRequest{})
 	req.Header().Set("openstatus-token", "my-secret-key")
@@ -415,7 +415,7 @@ func TestParseRecordAssertions_MixedAssertionTypes(t *testing.T) {
 }
 
 func TestMonitors_DNSMonitorFields(t *testing.T) {
-	h := server.NewPrivateLocationServer(testDB(), getTBClient(context.Background()))
+	h := server.NewPrivateLocationServer(testDB(), getDBWriter())
 
 	req := connect.NewRequest(&private_locationv1.MonitorsRequest{})
 	req.Header().Set("openstatus-token", "my-secret-key")
@@ -558,7 +558,7 @@ func TestParseRecordAssertions_MissingRequiredFields(t *testing.T) {
 }
 
 func TestMonitors_DNSMonitorWithRecordAssertions(t *testing.T) {
-	h := server.NewPrivateLocationServer(testDB(), getTBClient(context.Background()))
+	h := server.NewPrivateLocationServer(testDB(), getDBWriter())
 
 	req := connect.NewRequest(&private_locationv1.MonitorsRequest{})
 	req.Header().Set("openstatus-token", "my-secret-key")

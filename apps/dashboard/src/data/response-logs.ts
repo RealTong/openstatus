@@ -2,7 +2,7 @@ import type { RouterOutputs } from "@openstatus/api";
 import { monitorRegions } from "@openstatus/db/src/schema/constants";
 import { startOfDay } from "date-fns";
 
-type ResponseLog = RouterOutputs["tinybird"]["list"]["data"][number];
+type ResponseLog = RouterOutputs["monitorData"]["list"]["data"][number];
 
 const today = startOfDay(new Date());
 

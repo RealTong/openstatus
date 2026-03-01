@@ -6,17 +6,31 @@ import { user } from "@openstatus/db/src/schema";
 
 import { WelcomeEmail, sendEmail } from "@openstatus/emails";
 import { adapter } from "./adapter";
-import { GitHubProvider, GoogleProvider, ResendProvider } from "./providers";
+import {
+  GitHubProvider,
+  GoogleProvider,
+  ResendProvider,
+  getOIDCProvider,
+} from "./providers";
 
 export type { DefaultSession };
+
+function buildProviders() {
+  const providers =
+    process.env.NODE_ENV === "development" || process.env.SELF_HOST === "true"
+      ? [GitHubProvider, GoogleProvider, ResendProvider]
+      : [GitHubProvider, GoogleProvider];
+
+  const oidc = getOIDCProvider();
+  if (oidc) providers.push(oidc);
+
+  return providers;
+}
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   // debug: true,
   adapter,
-  providers:
-    process.env.NODE_ENV === "development" || process.env.SELF_HOST === "true"
-      ? [GitHubProvider, GoogleProvider, ResendProvider]
-      : [GitHubProvider, GoogleProvider],
+  providers: buildProviders(),
   callbacks: {
     async signIn(params) {
       // We keep updating the user info when we loggin in
@@ -61,6 +75,22 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         await db
           .update(user)
           .set({ updatedAt: new Date() })
+          .where(eq(user.id, Number(params.user.id)))
+          .run();
+      }
+
+      // OIDC provider — sync profile data
+      if (params.account?.provider === "custom-oidc") {
+        if (!params.profile) return true;
+        if (Number.isNaN(Number(params.user.id))) return true;
+
+        await db
+          .update(user)
+          .set({
+            name: params.profile.name ?? params.user.name,
+            photoUrl: (params.profile.picture as string) ?? undefined,
+            updatedAt: new Date(),
+          })
           .where(eq(user.id, Number(params.user.id)))
           .run();
       }

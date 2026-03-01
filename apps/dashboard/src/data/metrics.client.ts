@@ -25,7 +25,7 @@ const PERCENTILE_MAP = {
 
 // FIXME: rename pipe return values
 
-export function mapMetrics(metrics: RouterOutputs["tinybird"]["metrics"]) {
+export function mapMetrics(metrics: RouterOutputs["monitorData"]["metrics"]) {
   return metrics.data?.map((metric) => {
     return {
       p50: metric.p50Latency,
@@ -91,7 +91,7 @@ export const metricsCards = {
   }
 >;
 
-export function mapUptime(status: RouterOutputs["tinybird"]["uptime"]) {
+export function mapUptime(status: RouterOutputs["monitorData"]["uptime"]) {
   return status.data
     .map((status) => {
       return {
@@ -108,7 +108,7 @@ export function mapUptime(status: RouterOutputs["tinybird"]["uptime"]) {
  * Transform Tinybird `metricsRegions` response into RegionMetric[] for UI.
  */
 export function mapRegionMetrics(
-  timeline: RouterOutputs["tinybird"]["metricsRegions"] | undefined,
+  timeline: RouterOutputs["monitorData"]["metricsRegions"] | undefined,
   regions: string[],
   percentile: (typeof PERCENTILES)[number],
 ): RegionMetric[] {
@@ -182,7 +182,7 @@ export function mapRegionMetrics(
 }
 
 export function mapGlobalMetrics(
-  metrics: RouterOutputs["tinybird"]["globalMetrics"],
+  metrics: RouterOutputs["monitorData"]["globalMetrics"],
 ) {
   return metrics.data?.map((metric) => {
     return {
@@ -298,7 +298,7 @@ export function getMonitorListMetrics(
 }
 
 export function mapLatency(
-  latency: RouterOutputs["tinybird"]["metricsLatency"],
+  latency: RouterOutputs["monitorData"]["metricsLatency"],
   percentile: (typeof PERCENTILES)[number],
 ) {
   return latency.data?.map((metric) => {
@@ -310,7 +310,7 @@ export function mapLatency(
 }
 
 export function mapTimingPhases(
-  timingPhases: RouterOutputs["tinybird"]["metricsTimingPhases"],
+  timingPhases: RouterOutputs["monitorData"]["metricsTimingPhases"],
   percentile: (typeof PERCENTILES)[number],
 ) {
   return timingPhases.data?.map((metric) => {

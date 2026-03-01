@@ -4,7 +4,6 @@ import (
 	"context"
 	"log/slog"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -130,13 +129,13 @@ func GetEvent(ctx context.Context) *EventHolder {
 
 type privateLocationHandler struct {
 	db       *sqlx.DB
-	TbClient tinybird.Client
+	dbWriter tinybird.Client
 }
 
-func NewPrivateLocationServer(db *sqlx.DB, tbClient tinybird.Client) *privateLocationHandler {
+func NewPrivateLocationServer(db *sqlx.DB, dbWriter tinybird.Client) *privateLocationHandler {
 	return &privateLocationHandler{
 		db:       db,
-		TbClient: tbClient,
+		dbWriter: dbWriter,
 	}
 }
 
@@ -148,15 +147,9 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	r.Get("/health", s.healthHandler)
 
-	tinyBirdToken := os.Getenv("TINYBIRD_TOKEN")
+	dbWriter := tinybird.NewClient(s.db)
 
-	httpClient := &http.Client{
-		Timeout: 45 * time.Second,
-	}
-
-	tinybirdClient := tinybird.NewClient(httpClient, tinyBirdToken)
-
-	privateLocationServer := NewPrivateLocationServer(s.db, tinybirdClient)
+	privateLocationServer := NewPrivateLocationServer(s.db, dbWriter)
 	path, handler := v1.NewPrivateLocationServiceHandler(privateLocationServer)
 
 	r.Group(func(r chi.Router) {

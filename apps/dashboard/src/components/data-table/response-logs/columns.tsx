@@ -22,7 +22,7 @@ import { cn } from "@openstatus/ui/lib/utils";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Clock, Workflow } from "lucide-react";
 
-type ResponseLog = RouterOutputs["tinybird"]["list"]["data"][number];
+type ResponseLog = RouterOutputs["monitorData"]["list"]["data"][number];
 
 // export const columns: ColumnDef<ResponseLog>[] =
 export function getColumns(

@@ -25,7 +25,7 @@ export function AuditLogsWrapper({
   const trpc = useTRPC();
 
   const { data: auditLogs, isLoading } = useQuery(
-    trpc.tinybird.auditLog.queryOptions({ monitorId, interval }),
+    trpc.monitorData.auditLog.queryOptions({ monitorId, interval }),
   );
 
   const { data: privateLocations } = useQuery(

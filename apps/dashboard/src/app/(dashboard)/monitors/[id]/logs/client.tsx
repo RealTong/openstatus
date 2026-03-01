@@ -37,10 +37,10 @@ export function Client() {
     trpc.monitor.get.queryOptions({ id: Number.parseInt(id) }),
   );
   const { data: _logs, isLoading } = useQuery({
-    ...trpc.tinybird.list.queryOptions({ monitorId: id, from, to }),
+    ...trpc.monitorData.list.queryOptions({ monitorId: id, from, to }),
   });
   const { data: _log } = useQuery({
-    ...trpc.tinybird.get.queryOptions({ id: selected, monitorId: id }),
+    ...trpc.monitorData.get.queryOptions({ id: selected, monitorId: id }),
     enabled: !!selected,
   });
 

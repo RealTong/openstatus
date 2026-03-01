@@ -2,18 +2,16 @@ package server_test
 
 import (
 	"context"
-	"net/http"
 	"testing"
 
 	"connectrpc.com/connect"
 
 	"github.com/openstatushq/openstatus/apps/private-location/internal/server"
-	"github.com/openstatushq/openstatus/apps/private-location/internal/tinybird"
 	private_locationv1 "github.com/openstatushq/openstatus/apps/private-location/proto/private_location/v1"
 )
 
 func TestIngestTCP_Unauthenticated(t *testing.T) {
-	h := server.NewPrivateLocationServer(testDB(), tinybird.NewClient(http.DefaultClient, ""))
+	h := server.NewPrivateLocationServer(testDB(), getDBWriter())
 
 	req := connect.NewRequest(&private_locationv1.IngestTCPRequest{})
 	// No token header
@@ -30,7 +28,7 @@ func TestIngestTCP_Unauthenticated(t *testing.T) {
 }
 
 func TestIngestTCP_DBError(t *testing.T) {
-	h := server.NewPrivateLocationServer(testDB(), tinybird.NewClient(http.DefaultClient, ""))
+	h := server.NewPrivateLocationServer(testDB(), getDBWriter())
 
 	req := connect.NewRequest(&private_locationv1.IngestTCPRequest{})
 	req.Header().Set("openstatus-token", "token123")
@@ -49,7 +47,7 @@ func TestIngestTCP_DBError(t *testing.T) {
 }
 
 func TestIngestTCP_ValidationError_EmptyID(t *testing.T) {
-	h := server.NewPrivateLocationServer(testDB(), tinybird.NewClient(http.DefaultClient, ""))
+	h := server.NewPrivateLocationServer(testDB(), getDBWriter())
 
 	req := connect.NewRequest(&private_locationv1.IngestTCPRequest{
 		Id:        "",
@@ -70,7 +68,7 @@ func TestIngestTCP_ValidationError_EmptyID(t *testing.T) {
 }
 
 func TestIngestTCP_ValidationError_InvalidTimestamp(t *testing.T) {
-	h := server.NewPrivateLocationServer(testDB(), tinybird.NewClient(http.DefaultClient, ""))
+	h := server.NewPrivateLocationServer(testDB(), getDBWriter())
 
 	req := connect.NewRequest(&private_locationv1.IngestTCPRequest{
 		Id:        "tcp-123",
@@ -91,7 +89,7 @@ func TestIngestTCP_ValidationError_InvalidTimestamp(t *testing.T) {
 }
 
 func TestIngestTCP_ValidationError_NegativeLatency(t *testing.T) {
-	h := server.NewPrivateLocationServer(testDB(), tinybird.NewClient(http.DefaultClient, ""))
+	h := server.NewPrivateLocationServer(testDB(), getDBWriter())
 
 	req := connect.NewRequest(&private_locationv1.IngestTCPRequest{
 		Id:        "tcp-123",
@@ -113,7 +111,7 @@ func TestIngestTCP_ValidationError_NegativeLatency(t *testing.T) {
 }
 
 func TestIngestTCP_MonitorNotExist(t *testing.T) {
-	h := server.NewPrivateLocationServer(testDB(), tinybird.NewClient(http.DefaultClient, ""))
+	h := server.NewPrivateLocationServer(testDB(), getDBWriter())
 
 	req := connect.NewRequest(&private_locationv1.IngestTCPRequest{
 		Id:        "nonexistent-monitor",
@@ -134,7 +132,7 @@ func TestIngestTCP_MonitorNotExist(t *testing.T) {
 }
 
 func TestIngestTCP_MonitorExist(t *testing.T) {
-	h := server.NewPrivateLocationServer(testDB(), getTBClient(context.Background()))
+	h := server.NewPrivateLocationServer(testDB(), getDBWriter())
 
 	req := connect.NewRequest(&private_locationv1.IngestTCPRequest{
 		Id:            "5",
@@ -156,7 +154,7 @@ func TestIngestTCP_MonitorExist(t *testing.T) {
 }
 
 func TestIngestTCP_WithError(t *testing.T) {
-	h := server.NewPrivateLocationServer(testDB(), getTBClient(context.Background()))
+	h := server.NewPrivateLocationServer(testDB(), getDBWriter())
 
 	req := connect.NewRequest(&private_locationv1.IngestTCPRequest{
 		Id:            "5",

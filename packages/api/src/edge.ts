@@ -2,6 +2,7 @@ import { checkerRouter } from "./router/checker";
 import { incidentRouter } from "./router/incident";
 import { maintenanceRouter } from "./router/maintenance";
 import { monitorRouter } from "./router/monitor";
+import { monitorDataRouter } from "./router/monitorData";
 import { monitorTagRouter } from "./router/monitorTag";
 import { notificationRouter } from "./router/notification";
 import { pageRouter } from "./router/page";
@@ -18,6 +19,7 @@ import { createTRPCRouter } from "./trpc";
 export const edgeRouter = createTRPCRouter({
   workspace: workspaceRouter,
   monitor: monitorRouter,
+  monitorData: monitorDataRouter,
   page: pageRouter,
   pageComponent: pageComponentRouter,
   statusReport: statusReportRouter,

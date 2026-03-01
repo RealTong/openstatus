@@ -8,7 +8,7 @@ import type { RouterOutputs } from "@openstatus/api";
 import type { PrivateLocation } from "@openstatus/db/src/schema";
 import type { ColumnDef } from "@tanstack/react-table";
 
-type AuditLog = RouterOutputs["tinybird"]["auditLog"]["data"][number];
+type AuditLog = RouterOutputs["monitorData"]["auditLog"]["data"][number];
 
 export function getColumns(
   privateLocations?: PrivateLocation[],

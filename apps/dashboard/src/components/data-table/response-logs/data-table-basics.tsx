@@ -25,7 +25,7 @@ import {
 import { cn } from "@openstatus/ui/lib/utils";
 import { Braces, TableProperties } from "lucide-react";
 
-type ResponseLog = RouterOutputs["tinybird"]["get"]["data"][number];
+type ResponseLog = RouterOutputs["monitorData"]["get"]["data"][number];
 
 export function DataTableBasics({
   data,

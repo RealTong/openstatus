@@ -10,7 +10,7 @@ import { regions } from "@/data/regions";
 import { statusCodes } from "@/data/status-codes";
 import type { RouterOutputs } from "@openstatus/api";
 
-type ResponseLog = RouterOutputs["tinybird"]["list"]["data"][number];
+type ResponseLog = RouterOutputs["monitorData"]["list"]["data"][number];
 
 export interface ResponseLogsDataTableToolbarProps {
   table: Table<ResponseLog>;

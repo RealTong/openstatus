@@ -32,34 +32,17 @@ async function main() {
       {
         id: 1,
         slug: "love-openstatus",
-        stripeId: "stripeId1",
         name: "test",
-        subscriptionId: "subscriptionId",
-        plan: "team",
-        endsAt: null,
-        paidUntil: null,
-        limits:
-          '{"monitors":50,"synthetic-checks":150000,"periodicity":["30s","1m","5m","10m","30m","1h"],"multi-region":true,"max-regions":35,"data-retention":"24 months","status-pages":20,"maintenance":true,"status-subscribers":true,"custom-domain":true,"password-protection":true,"white-label":true,"notifications":true,"sms":true,"pagerduty":true,"notification-channels":50,"members":"Unlimited","audit-log":true,"regions":["ams","arn","atl","bog","bom","bos","cdg","den","dfw","ewr","eze","fra","gdl","gig","gru","hkg","iad","jnb","lax","lhr","mad","mia","nrt","ord","otp","phx","qro","scl","sea","sin","sjc","syd","waw","yul","yyz"]}',
       },
       {
         id: 2,
         slug: "test2",
-        stripeId: "stripeId2",
         name: "test2",
-        subscriptionId: "subscriptionId2",
-        plan: "free",
-        endsAt: null,
-        paidUntil: null,
       },
       {
         id: 3,
         slug: "test3",
-        stripeId: "stripeId3",
         name: "test3",
-        subscriptionId: "subscriptionId3",
-        plan: "team",
-        endsAt: null,
-        paidUntil: null,
       },
     ])
     .onConflictDoNothing()

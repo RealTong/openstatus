@@ -2,17 +2,15 @@ package server_test
 
 import (
 	"context"
-	"net/http"
 	"testing"
 
 	"connectrpc.com/connect"
 	"github.com/openstatushq/openstatus/apps/private-location/internal/server"
-	"github.com/openstatushq/openstatus/apps/private-location/internal/tinybird"
 	private_locationv1 "github.com/openstatushq/openstatus/apps/private-location/proto/private_location/v1"
 )
 
 func TestIngestDNS_Unauthenticated(t *testing.T) {
-	h := server.NewPrivateLocationServer(testDB(), tinybird.NewClient(http.DefaultClient, ""))
+	h := server.NewPrivateLocationServer(testDB(), getDBWriter())
 
 	req := connect.NewRequest(&private_locationv1.IngestDNSRequest{})
 	// No token header
@@ -29,7 +27,7 @@ func TestIngestDNS_Unauthenticated(t *testing.T) {
 }
 
 func TestIngestDNS_ValidationError_EmptyID(t *testing.T) {
-	h := server.NewPrivateLocationServer(testDB(), tinybird.NewClient(http.DefaultClient, ""))
+	h := server.NewPrivateLocationServer(testDB(), getDBWriter())
 
 	req := connect.NewRequest(&private_locationv1.IngestDNSRequest{
 		Id:        "",
@@ -50,7 +48,7 @@ func TestIngestDNS_ValidationError_EmptyID(t *testing.T) {
 }
 
 func TestIngestDNS_ValidationError_InvalidTimestamp(t *testing.T) {
-	h := server.NewPrivateLocationServer(testDB(), tinybird.NewClient(http.DefaultClient, ""))
+	h := server.NewPrivateLocationServer(testDB(), getDBWriter())
 
 	req := connect.NewRequest(&private_locationv1.IngestDNSRequest{
 		Id:        "dns-123",
@@ -71,7 +69,7 @@ func TestIngestDNS_ValidationError_InvalidTimestamp(t *testing.T) {
 }
 
 func TestIngestDNS_ValidationError_NegativeLatency(t *testing.T) {
-	h := server.NewPrivateLocationServer(testDB(), tinybird.NewClient(http.DefaultClient, ""))
+	h := server.NewPrivateLocationServer(testDB(), getDBWriter())
 
 	req := connect.NewRequest(&private_locationv1.IngestDNSRequest{
 		Id:        "dns-123",
@@ -93,7 +91,7 @@ func TestIngestDNS_ValidationError_NegativeLatency(t *testing.T) {
 }
 
 func TestIngestDNS_DBError(t *testing.T) {
-	h := server.NewPrivateLocationServer(testDB(), tinybird.NewClient(http.DefaultClient, ""))
+	h := server.NewPrivateLocationServer(testDB(), getDBWriter())
 
 	req := connect.NewRequest(&private_locationv1.IngestDNSRequest{
 		Id:        "nonexistent-monitor",
@@ -114,7 +112,7 @@ func TestIngestDNS_DBError(t *testing.T) {
 }
 
 func TestIngestDNS_MonitorNotExist(t *testing.T) {
-	h := server.NewPrivateLocationServer(testDB(), tinybird.NewClient(http.DefaultClient, ""))
+	h := server.NewPrivateLocationServer(testDB(), getDBWriter())
 
 	req := connect.NewRequest(&private_locationv1.IngestDNSRequest{
 		Id:        "nonexistent-monitor",
@@ -135,7 +133,7 @@ func TestIngestDNS_MonitorNotExist(t *testing.T) {
 }
 
 func TestIngestDNS_MonitorExist(t *testing.T) {
-	h := server.NewPrivateLocationServer(testDB(), getTBClient(context.Background()))
+	h := server.NewPrivateLocationServer(testDB(), getDBWriter())
 
 	req := connect.NewRequest(&private_locationv1.IngestDNSRequest{
 		Id:            "5",
@@ -158,7 +156,7 @@ func TestIngestDNS_MonitorExist(t *testing.T) {
 }
 
 func TestIngestDNS_WithRecords(t *testing.T) {
-	h := server.NewPrivateLocationServer(testDB(), getTBClient(context.Background()))
+	h := server.NewPrivateLocationServer(testDB(), getDBWriter())
 
 	req := connect.NewRequest(&private_locationv1.IngestDNSRequest{
 		Id:            "5",
@@ -188,7 +186,7 @@ func TestIngestDNS_WithRecords(t *testing.T) {
 }
 
 func TestIngestDNS_WithError(t *testing.T) {
-	h := server.NewPrivateLocationServer(testDB(), getTBClient(context.Background()))
+	h := server.NewPrivateLocationServer(testDB(), getDBWriter())
 
 	req := connect.NewRequest(&private_locationv1.IngestDNSRequest{
 		Id:            "5",

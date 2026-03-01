@@ -75,7 +75,7 @@ export function ChartAreaTimingPhases({
   const trpc = useTRPC();
 
   const { data: timingPhases } = useQuery(
-    trpc.tinybird.metricsTimingPhases.queryOptions({
+    trpc.monitorData.metricsTimingPhases.queryOptions({
       monitorId,
       period,
       type,

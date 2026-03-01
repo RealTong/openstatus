@@ -62,7 +62,7 @@ export function Client() {
 
   // HMM: why do we need two queries?
   const { data: globalHttpMetrics, isLoading: isLoadingHttp } = useQuery({
-    ...trpc.tinybird.globalMetrics.queryOptions({
+    ...trpc.monitorData.globalMetrics.queryOptions({
       monitorIds: httpMonitors,
       type: "http",
     }),
@@ -70,7 +70,7 @@ export function Client() {
   });
 
   const { data: globalTcpMetrics, isLoading: isLoadingTcp } = useQuery({
-    ...trpc.tinybird.globalMetrics.queryOptions({
+    ...trpc.monitorData.globalMetrics.queryOptions({
       monitorIds: tcpMonitors,
       type: "tcp",
     }),

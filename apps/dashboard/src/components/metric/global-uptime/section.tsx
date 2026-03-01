@@ -44,7 +44,7 @@ export function GlobalUptimeSection({
   const trpc = useTRPC();
 
   const { data: metrics, isLoading } = useQuery(
-    trpc.tinybird.metrics.queryOptions({
+    trpc.monitorData.metrics.queryOptions({
       monitorId,
       period,
       type: jobType,

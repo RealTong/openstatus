@@ -54,7 +54,7 @@ export function ChartBarUptime({
   const interval = periodToInterval[period];
 
   const { data: uptime } = useQuery(
-    trpc.tinybird.uptime.queryOptions({
+    trpc.monitorData.uptime.queryOptions({
       monitorId,
       fromDate: fromDate.toISOString(),
       toDate: toDate.toISOString(),

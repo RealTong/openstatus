@@ -54,7 +54,7 @@ export function ChartAreaLatency({
   const toDate = endOfDay(new Date());
 
   const { data: latency } = useQuery(
-    trpc.tinybird.metricsLatency.queryOptions({
+    trpc.monitorData.metricsLatency.queryOptions({
       monitorId,
       period,
       type,

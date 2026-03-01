@@ -221,10 +221,26 @@ app.route("/v1", api);
 app.route("/slack", slackRoute);
 
 /**
- * TODO: move to `workflows` app
- * This route is used by our checker to update the status of the monitors,
- * create incidents, and send notifications.
+ * Internal API — used by private-location server to trigger alerting
+ * when a monitor check result is ingested.
  */
+app.post("/internal/alerting/process", async (c) => {
+  const body = await c.req.json();
+  const { processStatusChange } = await import("./services/alerting");
+  try {
+    await processStatusChange(body);
+    return c.json({ ok: true }, 200);
+  } catch (err) {
+    logger.error("alerting error", { error: err });
+    return c.json({ ok: false, error: String(err) }, 500);
+  }
+});
+
+/**
+ * Data Retention Cron
+ */
+import { startDataRetentionCron } from "./cron/data-retention";
+startDataRetentionCron();
 
 const isDev = process.env.NODE_ENV === "development";
 const port = 3000;

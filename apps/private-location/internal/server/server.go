@@ -69,7 +69,6 @@ func NewServer() (*http.Server, func(context.Context)) {
 		"port", port,
 		"instance_id", instanceID,
 		"axiom_configured", os.Getenv("AXIOM_TOKEN") != "",
-		"tinybird_configured", os.Getenv("TINYBIRD_TOKEN") != "",
 	)
 
 	// Return cleanup function for graceful shutdown

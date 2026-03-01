@@ -3,7 +3,6 @@ package server_test
 import (
 	"context"
 	"log"
-	"net/http"
 	"os"
 	"testing"
 
@@ -16,7 +15,6 @@ import (
 )
 
 func testDB() *sqlx.DB {
-
 	f, err := os.CreateTemp("", "db")
 	if err != nil {
 		log.Fatalln(err)
@@ -26,40 +24,21 @@ func testDB() *sqlx.DB {
 		log.Fatalln(err)
 	}
 	dat, err := os.ReadFile("./db_testdata")
+	if err != nil {
+		log.Fatalln(err)
+	}
 	db.MustExec(string(dat))
 
 	return db
 }
 
-type interceptorHTTPClient struct {
-	f func(req *http.Request) (*http.Response, error)
-}
-
-func (i *interceptorHTTPClient) RoundTrip(req *http.Request) (*http.Response, error) {
-	return i.f(req)
-}
-
-func (i *interceptorHTTPClient) GetHTTPClient() *http.Client {
-	return &http.Client{
-		Transport: i,
-	}
-}
-
-func getTBClient(ctx context.Context) tinybird.Client {
-	interceptor := &interceptorHTTPClient{
-		f: func(req *http.Request) (*http.Response, error) {
-			return &http.Response{
-				StatusCode: http.StatusAccepted,
-			}, nil
-		},
-	}
-
-	client := tinybird.NewClient(interceptor.GetHTTPClient(), "apiKey")
-	return client
+func getDBWriter() tinybird.Client {
+	db := testDB()
+	return tinybird.NewClient(db)
 }
 
 func TestIngestHTTP_Unauthenticated(t *testing.T) {
-	h := server.NewPrivateLocationServer(testDB(), getTBClient(context.Background()))
+	h := server.NewPrivateLocationServer(testDB(), getDBWriter())
 
 	req := connect.NewRequest(&private_locationv1.IngestHTTPRequest{})
 	// No token header
@@ -76,7 +55,7 @@ func TestIngestHTTP_Unauthenticated(t *testing.T) {
 }
 
 func TestIngestHTTP_DBError(t *testing.T) {
-	h := server.NewPrivateLocationServer(testDB(), getTBClient(context.Background()))
+	h := server.NewPrivateLocationServer(testDB(), getDBWriter())
 
 	req := connect.NewRequest(&private_locationv1.IngestHTTPRequest{})
 	req.Header().Set("openstatus-token", "token123")
@@ -96,7 +75,7 @@ func TestIngestHTTP_DBError(t *testing.T) {
 }
 
 func TestIngestHTTP_MonitorNotExist(t *testing.T) {
-	h := server.NewPrivateLocationServer(testDB(), getTBClient(context.Background()))
+	h := server.NewPrivateLocationServer(testDB(), getDBWriter())
 
 	req := connect.NewRequest(&private_locationv1.IngestHTTPRequest{})
 	req.Header().Set("openstatus-token", "my-secret-key")
@@ -116,7 +95,7 @@ func TestIngestHTTP_MonitorNotExist(t *testing.T) {
 }
 
 func TestIngestHTTP_MonitorExist(t *testing.T) {
-	h := server.NewPrivateLocationServer(testDB(), getTBClient(context.Background()))
+	h := server.NewPrivateLocationServer(testDB(), getDBWriter())
 
 	req := connect.NewRequest(&private_locationv1.IngestHTTPRequest{})
 	req.Header().Set("openstatus-token", "my-secret-key")
@@ -134,7 +113,7 @@ func TestIngestHTTP_MonitorExist(t *testing.T) {
 }
 
 func TestIngestHTTP_ValidationError_EmptyMonitorID(t *testing.T) {
-	h := server.NewPrivateLocationServer(testDB(), getTBClient(context.Background()))
+	h := server.NewPrivateLocationServer(testDB(), getDBWriter())
 
 	req := connect.NewRequest(&private_locationv1.IngestHTTPRequest{
 		MonitorId: "",
@@ -155,7 +134,7 @@ func TestIngestHTTP_ValidationError_EmptyMonitorID(t *testing.T) {
 }
 
 func TestIngestHTTP_ValidationError_InvalidTimestamp(t *testing.T) {
-	h := server.NewPrivateLocationServer(testDB(), getTBClient(context.Background()))
+	h := server.NewPrivateLocationServer(testDB(), getDBWriter())
 
 	req := connect.NewRequest(&private_locationv1.IngestHTTPRequest{
 		MonitorId: "5",
@@ -176,7 +155,7 @@ func TestIngestHTTP_ValidationError_InvalidTimestamp(t *testing.T) {
 }
 
 func TestIngestHTTP_ValidationError_NegativeLatency(t *testing.T) {
-	h := server.NewPrivateLocationServer(testDB(), getTBClient(context.Background()))
+	h := server.NewPrivateLocationServer(testDB(), getDBWriter())
 
 	req := connect.NewRequest(&private_locationv1.IngestHTTPRequest{
 		MonitorId: "5",
@@ -198,7 +177,7 @@ func TestIngestHTTP_ValidationError_NegativeLatency(t *testing.T) {
 }
 
 func TestIngestHTTP_WithFullData(t *testing.T) {
-	h := server.NewPrivateLocationServer(testDB(), getTBClient(context.Background()))
+	h := server.NewPrivateLocationServer(testDB(), getDBWriter())
 
 	req := connect.NewRequest(&private_locationv1.IngestHTTPRequest{
 		Id:            "request-1",
@@ -224,7 +203,7 @@ func TestIngestHTTP_WithFullData(t *testing.T) {
 }
 
 func TestIngestHTTP_WithError(t *testing.T) {
-	h := server.NewPrivateLocationServer(testDB(), getTBClient(context.Background()))
+	h := server.NewPrivateLocationServer(testDB(), getDBWriter())
 
 	req := connect.NewRequest(&private_locationv1.IngestHTTPRequest{
 		Id:            "request-1",

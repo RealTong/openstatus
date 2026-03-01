@@ -15,7 +15,7 @@ import { useCopyToClipboard } from "@openstatus/ui/hooks/use-copy-to-clipboard";
 import { Check, Copy } from "lucide-react";
 import { DataTableBasics } from "./data-table-basics";
 
-type ResponseLog = RouterOutputs["tinybird"]["get"]["data"][number];
+type ResponseLog = RouterOutputs["monitorData"]["get"]["data"][number];
 
 export function Sheet({
   data,

@@ -56,7 +56,7 @@ export function Client() {
   const toDate = endOfDay(new Date());
 
   const regionTimelineQuery = {
-    ...trpc.tinybird.metricsRegions.queryOptions({
+    ...trpc.monitorData.metricsRegions.queryOptions({
       monitorId: id,
       period: period,
       type: (monitor?.jobType ?? "http") as "http" | "tcp",

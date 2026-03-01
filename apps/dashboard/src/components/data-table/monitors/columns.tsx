@@ -16,7 +16,7 @@ import { TableCellUnavailable } from "../table-cell-unavailable";
 
 type Monitor = RouterOutputs["monitor"]["list"][number] & {
   globalMetrics?:
-    | RouterOutputs["tinybird"]["globalMetrics"]["data"][number]
+    | RouterOutputs["monitorData"]["globalMetrics"]["data"][number]
     // NOTE: after loading the data, if the monitor has no metrics, the value will be `false`
     | false;
 };
