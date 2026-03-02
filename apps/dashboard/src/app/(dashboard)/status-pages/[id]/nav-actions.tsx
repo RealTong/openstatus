@@ -3,6 +3,7 @@
 import { QuickActions } from "@/components/dropdowns/quick-actions";
 import { NavFeedback } from "@/components/nav/nav-feedback";
 import { getActions } from "@/data/status-pages.client";
+import { getStatusPageUrl } from "@/lib/status-page-url";
 import { useTRPC } from "@/lib/trpc/client";
 import { Button } from "@openstatus/ui/components/ui/button";
 import {
@@ -58,9 +59,10 @@ export function NavActions() {
           <TooltipTrigger asChild>
             <Button variant="ghost" size="sm" className="group h-7 w-7" asChild>
               <a
-                href={`https://${
-                  statusPage.customDomain || `${statusPage.slug}.openstatus.dev`
-                }`}
+                href={getStatusPageUrl({
+                  slug: statusPage.slug,
+                  customDomain: statusPage.customDomain,
+                })}
                 target="_blank"
                 rel="noreferrer"
               >

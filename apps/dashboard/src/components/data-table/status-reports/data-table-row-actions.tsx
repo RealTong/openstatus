@@ -5,6 +5,7 @@ import { FormSheetStatusReportUpdate } from "@/components/forms/status-report-up
 import { FormSheetStatusReport } from "@/components/forms/status-report/sheet";
 import { getNextStatus } from "@/data/status-report-updates.client";
 import { getActions } from "@/data/status-reports.client";
+import { getStatusPageUrl } from "@/lib/status-page-url";
 import { useTRPC } from "@/lib/trpc/client";
 import type { RouterOutputs } from "@openstatus/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -30,10 +31,11 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
     "view-report": () => {
       if (typeof window !== "undefined") {
         window.open(
-          `https://${
-            row.original.page.customDomain ||
-            `${row.original.page.slug}.openstatus.dev`
-          }/events/report/${row.original.id}`,
+          getStatusPageUrl({
+            slug: row.original.page.slug,
+            customDomain: row.original.page.customDomain,
+            path: `/events/report/${row.original.id}`,
+          }),
           "_blank",
         );
       }

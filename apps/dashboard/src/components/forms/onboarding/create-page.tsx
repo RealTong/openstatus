@@ -2,6 +2,7 @@
 
 // FIXME: use input-group instead
 import { InputWithAddons } from "@/components/common/input-with-addons";
+import { getStatusPageSlugSuffix } from "@/lib/status-page-url";
 import { useTRPC } from "@/lib/trpc/client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -103,7 +104,7 @@ export function CreatePageForm({
               <FormControl>
                 <InputWithAddons
                   placeholder="status"
-                  trailing=".openstatus.dev"
+                  trailing={getStatusPageSlugSuffix()}
                   {...field}
                 />
               </FormControl>

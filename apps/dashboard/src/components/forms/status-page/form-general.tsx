@@ -20,6 +20,7 @@ import {
   FormCardSeparator,
   FormCardTitle,
 } from "@/components/forms/form-card";
+import { getStatusPageSlugSuffix } from "@/lib/status-page-url";
 import { useTRPC } from "@/lib/trpc/client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@openstatus/ui/components/ui/button";
@@ -184,7 +185,7 @@ export function FormGeneral({
                   <FormControl>
                     <InputWithAddons
                       placeholder="status"
-                      trailing=".openstatus.dev"
+                      trailing={getStatusPageSlugSuffix()}
                       {...field}
                     />
                   </FormControl>

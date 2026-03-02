@@ -1,4 +1,5 @@
 import { checkerRouter } from "./router/checker";
+import { domainRouter } from "./router/domain";
 import { incidentRouter } from "./router/incident";
 import { maintenanceRouter } from "./router/maintenance";
 import { monitorRouter } from "./router/monitor";
@@ -32,4 +33,5 @@ export const edgeRouter = createTRPCRouter({
   checker: checkerRouter,
   statusPage: statusPageRouter,
   privateLocation: privateLocationRouter,
+  domain: domainRouter,
 });

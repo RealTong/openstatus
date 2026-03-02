@@ -33,8 +33,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@openstatus/ui/components/ui/tooltip";
-import { NavBanner } from "./nav-banner";
-import { NavHelp } from "./nav-help";
 
 const SIDEBAR_KEYBOARD_SHORTCUT = "[";
 
@@ -99,10 +97,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavOverview items={data.overview} />
         <NavStatusPages />
         <NavMonitors />
-        <div className="mt-auto px-2">
-          <NavBanner />
-        </div>
-        <NavHelp />
       </SidebarContent>
       <SidebarFooter className="flex h-14 flex-col justify-center gap-0 border-t p-0">
         <NavUser />

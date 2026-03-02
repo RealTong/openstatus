@@ -9,7 +9,7 @@ import {
   type TRPCQueryOptions,
   createTRPCOptionsProxy,
 } from "@trpc/tanstack-react-query";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { cache } from "react";
 import { makeQueryClient } from "./query-client";
 import { endingLink } from "./shared";
@@ -31,9 +31,29 @@ export const trpc = createTRPCOptionsProxy<AppRouter>({
         headers: {
           "x-trpc-source": "server",
         },
-        fetch: async (url, options) => {
+        fetch: (async (url, options) => {
           const cookieStore = await cookies();
-          return fetch(url, {
+          const headerStore = await headers();
+          const host =
+            headerStore.get("x-forwarded-host") ?? headerStore.get("host");
+          const proto =
+            headerStore.get("x-forwarded-proto") ??
+            (host?.includes("localhost") ? "http" : "https");
+
+          const originalUrl =
+            typeof url === "string"
+              ? url
+              : url instanceof URL
+                ? url.toString()
+                : url.url;
+
+          const requestUrl = new URL(originalUrl);
+          if (host) {
+            requestUrl.host = host;
+            requestUrl.protocol = `${proto}:`;
+          }
+
+          return fetch(requestUrl.toString(), {
             ...options,
             credentials: "include",
             headers: {
@@ -41,7 +61,7 @@ export const trpc = createTRPCOptionsProxy<AppRouter>({
               cookie: cookieStore.toString(),
             },
           });
-        },
+        }) as typeof fetch,
       }),
     ],
   }),

@@ -21,8 +21,8 @@ export const monitorDataRouter = createTRPCRouter({
       z.object({
         monitorId: z.string(),
         period: z.enum(["1d", "7d", "14d"]),
-        type: z.enum(["http", "tcp"]),
-        regions: z.array(z.string()).optional(),
+        type: z.enum(["http", "tcp", "dns"]),
+        regions: z.array(z.string()).nullish(),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -35,17 +35,19 @@ export const monitorDataRouter = createTRPCRouter({
         eq(monitorResult.monitorId, Number(input.monitorId)),
         eq(monitorResult.workspaceId, ctx.workspace.id),
       ];
+      const regions = normalizeRegions(input.regions);
 
-      if (input.regions?.length) {
-        conditions.push(inArray(monitorResult.region, input.regions));
+      if (regions.length) {
+        conditions.push(inArray(monitorResult.region, regions));
       }
 
       // Fetch two periods: current and previous (for trend)
       const rows = await ctx.db
         .select({
-          bucket: sql<number>`CASE WHEN ${monitorResult.createdAt} >= ${periodStart} THEN 1 ELSE 0 END`.as(
-            "bucket",
-          ),
+          bucket:
+            sql<number>`CASE WHEN ${monitorResult.createdAt} >= ${periodStart} THEN 1 ELSE 0 END`.as(
+              "bucket",
+            ),
           count: sql<number>`COUNT(*)`,
           success: sql<number>`SUM(CASE WHEN ${monitorResult.requestStatus} = 'success' THEN 1 ELSE 0 END)`,
           degraded: sql<number>`SUM(CASE WHEN ${monitorResult.requestStatus} = 'degraded' THEN 1 ELSE 0 END)`,
@@ -54,7 +56,10 @@ export const monitorDataRouter = createTRPCRouter({
         })
         .from(monitorResult)
         .where(
-          and(...conditions, gte(monitorResult.createdAt, new Date(prevPeriodStart * 1000))),
+          and(
+            ...conditions,
+            gte(monitorResult.createdAt, new Date(prevPeriodStart * 1000)),
+          ),
         )
         .groupBy(sql`bucket`);
 
@@ -68,10 +73,8 @@ export const monitorDataRouter = createTRPCRouter({
             bucket === 1
               ? new Date(periodStart * 1000)
               : new Date(prevPeriodStart * 1000),
-            bucket === 1
-              ? new Date(now * 1000)
-              : new Date(periodStart * 1000),
-            input.regions,
+            bucket === 1 ? new Date(now * 1000) : new Date(periodStart * 1000),
+            regions,
           ),
         ),
       );
@@ -115,8 +118,8 @@ export const monitorDataRouter = createTRPCRouter({
         fromDate: z.string().optional(),
         toDate: z.string().optional(),
         interval: z.number().default(1440), // minutes
-        regions: z.array(z.string()).optional(),
-        type: z.enum(["http", "tcp"]).optional(),
+        regions: z.array(z.string()).nullish(),
+        type: z.enum(["http", "tcp", "dns"]).optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -133,16 +136,18 @@ export const monitorDataRouter = createTRPCRouter({
         gte(monitorResult.createdAt, new Date(fromTs * 1000)),
         lte(monitorResult.createdAt, new Date(toTs * 1000)),
       ];
+      const regions = normalizeRegions(input.regions);
 
-      if (input.regions?.length) {
-        conditions.push(inArray(monitorResult.region, input.regions));
+      if (regions.length) {
+        conditions.push(inArray(monitorResult.region, regions));
       }
 
       const rows = await ctx.db
         .select({
-          interval: sql<number>`(CAST(${monitorResult.createdAt} AS INTEGER) / ${intervalSeconds}) * ${intervalSeconds}`.as(
-            "interval",
-          ),
+          interval:
+            sql<number>`(CAST(${monitorResult.createdAt} AS INTEGER) / ${intervalSeconds}) * ${intervalSeconds}`.as(
+              "interval",
+            ),
           success: sql<number>`SUM(CASE WHEN ${monitorResult.requestStatus} = 'success' THEN 1 ELSE 0 END)`,
           degraded: sql<number>`SUM(CASE WHEN ${monitorResult.requestStatus} = 'degraded' THEN 1 ELSE 0 END)`,
           error: sql<number>`SUM(CASE WHEN ${monitorResult.requestStatus} = 'error' THEN 1 ELSE 0 END)`,
@@ -169,8 +174,8 @@ export const monitorDataRouter = createTRPCRouter({
       z.object({
         monitorId: z.string(),
         period: z.enum(["1d", "7d", "14d"]),
-        type: z.enum(["http", "tcp"]).optional(),
-        regions: z.array(z.string()).optional(),
+        type: z.enum(["http", "tcp", "dns"]).optional(),
+        regions: z.array(z.string()).nullish(),
         fromDate: z.string().optional(),
         toDate: z.string().optional(),
       }),
@@ -190,16 +195,18 @@ export const monitorDataRouter = createTRPCRouter({
         gte(monitorResult.createdAt, new Date(fromTs * 1000)),
         lte(monitorResult.createdAt, new Date(toTs * 1000)),
       ];
+      const regions = normalizeRegions(input.regions);
 
-      if (input.regions?.length) {
-        conditions.push(inArray(monitorResult.region, input.regions));
+      if (regions.length) {
+        conditions.push(inArray(monitorResult.region, regions));
       }
 
       const rows = await ctx.db
         .select({
-          bucket: sql<number>`(CAST(${monitorResult.createdAt} AS INTEGER) / ${intervalSeconds}) * ${intervalSeconds}`.as(
-            "bucket",
-          ),
+          bucket:
+            sql<number>`(CAST(${monitorResult.createdAt} AS INTEGER) / ${intervalSeconds}) * ${intervalSeconds}`.as(
+              "bucket",
+            ),
           latencies: sql<string>`GROUP_CONCAT(${monitorResult.latency})`.as(
             "latencies",
           ),
@@ -235,7 +242,7 @@ export const monitorDataRouter = createTRPCRouter({
         period: z.enum(["1d", "7d", "14d"]),
         type: z.enum(["http"]).optional(),
         interval: z.number().optional(),
-        regions: z.array(z.string()).optional(),
+        regions: z.array(z.string()).nullish(),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -251,31 +258,35 @@ export const monitorDataRouter = createTRPCRouter({
         eq(monitorResult.workspaceId, ctx.workspace.id),
         gte(monitorResult.createdAt, new Date(fromTs * 1000)),
       ];
+      const regions = normalizeRegions(input.regions);
 
-      if (input.regions?.length) {
-        conditions.push(inArray(monitorResult.region, input.regions));
+      if (regions.length) {
+        conditions.push(inArray(monitorResult.region, regions));
       }
 
       const rows = await ctx.db
         .select({
-          bucket: sql<number>`(CAST(${monitorResult.createdAt} AS INTEGER) / ${intervalSeconds}) * ${intervalSeconds}`.as(
-            "bucket",
-          ),
+          bucket:
+            sql<number>`(CAST(${monitorResult.createdAt} AS INTEGER) / ${intervalSeconds}) * ${intervalSeconds}`.as(
+              "bucket",
+            ),
           dnsValues: sql<string>`GROUP_CONCAT(${monitorResult.timingDns})`.as(
             "dns_values",
           ),
-          connectValues: sql<string>`GROUP_CONCAT(${monitorResult.timingConnection})`.as(
-            "connect_values",
-          ),
+          connectValues:
+            sql<string>`GROUP_CONCAT(${monitorResult.timingConnection})`.as(
+              "connect_values",
+            ),
           tlsValues: sql<string>`GROUP_CONCAT(${monitorResult.timingTls})`.as(
             "tls_values",
           ),
           ttfbValues: sql<string>`GROUP_CONCAT(${monitorResult.timingTtfb})`.as(
             "ttfb_values",
           ),
-          transferValues: sql<string>`GROUP_CONCAT(${monitorResult.timingTransfer})`.as(
-            "transfer_values",
-          ),
+          transferValues:
+            sql<string>`GROUP_CONCAT(${monitorResult.timingTransfer})`.as(
+              "transfer_values",
+            ),
         })
         .from(monitorResult)
         .where(and(...conditions))
@@ -331,8 +342,8 @@ export const monitorDataRouter = createTRPCRouter({
       z.object({
         monitorId: z.string(),
         period: z.enum(["1d", "7d", "14d"]),
-        type: z.enum(["http", "tcp"]).optional(),
-        regions: z.array(z.string()).optional(),
+        type: z.enum(["http", "tcp", "dns"]).optional(),
+        regions: z.array(z.string()).nullish(),
         interval: z.number().default(30), // minutes
         fromDate: z.string().optional(),
         toDate: z.string().optional(),
@@ -352,17 +363,19 @@ export const monitorDataRouter = createTRPCRouter({
         gte(monitorResult.createdAt, new Date(fromTs * 1000)),
         lte(monitorResult.createdAt, new Date(toTs * 1000)),
       ];
+      const regions = normalizeRegions(input.regions);
 
-      if (input.regions?.length) {
-        conditions.push(inArray(monitorResult.region, input.regions));
+      if (regions.length) {
+        conditions.push(inArray(monitorResult.region, regions));
       }
 
       const rows = await ctx.db
         .select({
           region: monitorResult.region,
-          timestamp: sql<number>`(CAST(${monitorResult.createdAt} AS INTEGER) / ${intervalSeconds}) * ${intervalSeconds}`.as(
-            "timestamp",
-          ),
+          timestamp:
+            sql<number>`(CAST(${monitorResult.createdAt} AS INTEGER) / ${intervalSeconds}) * ${intervalSeconds}`.as(
+              "timestamp",
+            ),
           latencies: sql<string>`GROUP_CONCAT(${monitorResult.latency})`.as(
             "latencies",
           ),
@@ -396,7 +409,7 @@ export const monitorDataRouter = createTRPCRouter({
     .input(
       z.object({
         monitorIds: z.array(z.string()),
-        type: z.enum(["http", "tcp"]).optional(),
+        type: z.enum(["http", "tcp", "dns"]).optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -415,10 +428,7 @@ export const monitorDataRouter = createTRPCRouter({
         .from(monitorResult)
         .where(
           and(
-            inArray(
-              monitorResult.monitorId,
-              input.monitorIds.map(Number),
-            ),
+            inArray(monitorResult.monitorId, input.monitorIds.map(Number)),
             eq(monitorResult.workspaceId, ctx.workspace.id),
             gte(monitorResult.createdAt, new Date(oneDayAgo * 1000)),
           ),
@@ -460,14 +470,10 @@ export const monitorDataRouter = createTRPCRouter({
       ];
 
       if (input.from) {
-        conditions.push(
-          gte(monitorResult.createdAt, new Date(input.from)),
-        );
+        conditions.push(gte(monitorResult.createdAt, new Date(input.from)));
       }
       if (input.to) {
-        conditions.push(
-          lte(monitorResult.createdAt, new Date(input.to)),
-        );
+        conditions.push(lte(monitorResult.createdAt, new Date(input.to)));
       }
 
       const rows = await ctx.db
@@ -630,6 +636,14 @@ function resolveTimeRange(
     ? Math.floor(new Date(fromDate).getTime() / 1000)
     : now - periodToSeconds(period ?? "7d");
   return { fromTs, toTs };
+}
+
+function normalizeRegions(regions: string[] | null | undefined): string[] {
+  if (!regions?.length) return [];
+  return regions.filter((region) => {
+    const value = region?.trim();
+    return !!value && value !== "undefined" && value !== "null";
+  });
 }
 
 function parseLatencies(csv: string | null): number[] {

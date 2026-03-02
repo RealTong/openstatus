@@ -1,6 +1,7 @@
 "use client";
 
 import { FormComponents } from "@/components/forms/components/form-components";
+import { getStatusPageUrl } from "@/lib/status-page-url";
 import { useTRPC } from "@/lib/trpc/client";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
@@ -75,9 +76,10 @@ export function FormComponentsUpdate() {
     groups,
   };
 
-  const configLink = `https://${
-    statusPage.slug
-  }.stpg.dev?configuration-token=${statusPage.createdAt?.getTime().toString()}`;
+  const configLink = `${getStatusPageUrl({
+    slug: statusPage.slug,
+    customDomain: statusPage.customDomain,
+  })}?configuration-token=${statusPage.createdAt?.getTime().toString()}`;
 
   return (
     <FormCardGroup>

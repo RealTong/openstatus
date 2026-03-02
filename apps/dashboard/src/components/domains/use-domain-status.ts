@@ -6,18 +6,31 @@ import { useCallback } from "react";
 
 export function useDomainStatus(domain?: string) {
   const trpc = useTRPC();
+  const normalizedDomain = domain?.trim();
+  const enabled = !!normalizedDomain;
+
   const {
     data: domainJson,
     refetch: refetchDomain,
     isLoading: isLoadingDomain,
     isRefetching: isRefetchingDomain,
-  } = useQuery(trpc.domain.getDomainResponse.queryOptions({ domain }));
+  } = useQuery(
+    trpc.domain.getDomainResponse.queryOptions(
+      { domain: normalizedDomain },
+      { enabled },
+    ),
+  );
   const {
     data: configJson,
     refetch: refetchConfig,
     isLoading: isLoadingConfig,
     isRefetching: isRefetchingConfig,
-  } = useQuery(trpc.domain.getConfigResponse.queryOptions({ domain }));
+  } = useQuery(
+    trpc.domain.getConfigResponse.queryOptions(
+      { domain: normalizedDomain },
+      { enabled },
+    ),
+  );
   const {
     data: verificationJson,
     refetch: refetchVerification,
@@ -25,8 +38,8 @@ export function useDomainStatus(domain?: string) {
     isRefetching: isRefetchingVerification,
   } = useQuery(
     trpc.domain.verifyDomain.queryOptions(
-      { domain },
-      { enabled: !domainJson?.verified },
+      { domain: normalizedDomain },
+      { enabled: enabled && !domainJson?.verified },
     ),
   );
 
@@ -35,6 +48,15 @@ export function useDomainStatus(domain?: string) {
     refetchConfig();
     refetchVerification();
   }, [refetchDomain, refetchConfig, refetchVerification]);
+
+  if (!enabled) {
+    return {
+      status: "Unknown Error" as DomainVerificationStatusProps,
+      domainJson: undefined,
+      refresh: refreshAll,
+      isLoading: false,
+    };
+  }
 
   let status: DomainVerificationStatusProps = "Valid Configuration";
 

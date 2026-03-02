@@ -40,6 +40,8 @@ const messages = [
 export default function Page() {
   const trpc = useTRPC();
   const { data: workspace } = useQuery(trpc.workspace.get.queryOptions());
+  const workspaceLimits = (workspace as { limits?: Record<string, number> })
+    ?.limits;
   return (
     <SectionGroup>
       <Section>
@@ -57,7 +59,7 @@ export default function Page() {
             .
           </SectionDescription>
         </SectionHeader>
-        {!workspace?.limits["slack-agent"] ? (
+        {!workspaceLimits?.["slack-agent"] ? (
           <Note color="info" size="sm">
             <Info />
             This is a paid feature. Upgrade your plan to use the Slack agent.

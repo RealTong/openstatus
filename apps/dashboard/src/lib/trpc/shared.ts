@@ -7,15 +7,20 @@ import superjson from "superjson";
 const getBaseUrl = () => {
   if (typeof window !== "undefined") return "";
   // Note: dashboard has its own tRPC API routes
-  if (process.env.VERCEL_URL) return "https://app.openstatus.dev"; // Vercel
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`; // Vercel
+
+  // Prefer the actual runtime port first (e.g. `next dev -p 3001`).
+  const runtimePort = process.env.PORT;
+  if (runtimePort) return `http://localhost:${runtimePort}`;
+
+  // Fallback to explicit public URL if provided.
+  const publicUrl = process.env.NEXT_PUBLIC_URL?.replace(/\/$/, "");
+  if (publicUrl) return publicUrl;
+
   return "http://localhost:3000"; // Local dev and Docker (internal calls)
 };
 
-const lambdas = [
-  "emailRouter",
-  "apiKeyRouter",
-  "integrationRouter",
-];
+const lambdas = ["emailRouter", "apiKeyRouter", "integrationRouter"];
 
 export const endingLink = (opts?: {
   fetch?: typeof fetch;

@@ -3,6 +3,7 @@
 import { Link } from "@/components/common/link";
 import { TableCellLink } from "@/components/data-table/table-cell-link";
 import { SidebarRight } from "@/components/nav/sidebar-right";
+import { getStatusPageUrl } from "@/lib/status-page-url";
 import { useTRPC } from "@/lib/trpc/client";
 import {
   Tooltip,
@@ -25,7 +26,15 @@ export function Sidebar() {
 
   if (!statusPage) return null;
 
-  const BADGE_URL = `https://${statusPage.slug}.openstatus.dev/badge/v2`;
+  const statusPageUrl = getStatusPageUrl({
+    slug: statusPage.slug,
+    customDomain: statusPage.customDomain,
+  });
+  const badgeUrl = getStatusPageUrl({
+    slug: statusPage.slug,
+    customDomain: statusPage.customDomain,
+    path: "/badge/v2",
+  });
 
   return (
     <SidebarRight
@@ -37,13 +46,7 @@ export function Sidebar() {
             {
               label: "Slug",
               value: (
-                <Link
-                  href={`https://${
-                    statusPage.customDomain ||
-                    `${statusPage.slug}.openstatus.dev`
-                  }`}
-                  target="_blank"
-                >
+                <Link href={statusPageUrl} target="_blank">
                   {statusPage.slug}
                 </Link>
               ),
@@ -52,7 +55,12 @@ export function Sidebar() {
               label: "Access Type",
               value: statusPage.accessType,
             },
-            { label: "Domain", value: statusPage.customDomain || "-" },
+            {
+              label: "Domain",
+              value:
+                statusPage.customDomain ||
+                statusPageUrl.replace(/^https?:\/\//, ""),
+            },
             {
               label: "Favicon",
               value: statusPage.icon ? (
@@ -71,16 +79,16 @@ export function Sidebar() {
                     <TooltipTrigger className="align-middle">
                       <img
                         className="h-5 rounded-sm border"
-                        src={BADGE_URL}
+                        src={badgeUrl}
                         alt="badge"
                       />
                     </TooltipTrigger>
                     <TooltipContent
                       className="cursor-pointer"
                       side="left"
-                      onClick={() => copy(BADGE_URL, { withToast: true })}
+                      onClick={() => copy(badgeUrl, { withToast: true })}
                     >
-                      {BADGE_URL}
+                      {badgeUrl}
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -133,13 +141,7 @@ export function Sidebar() {
       ]}
       footerButton={{
         onClick: () =>
-          typeof window !== "undefined" &&
-          window.open(
-            `https://${
-              statusPage.customDomain || `${statusPage.slug}.openstatus.dev`
-            }`,
-            "_blank",
-          ),
+          typeof window !== "undefined" && window.open(statusPageUrl, "_blank"),
         children: (
           <>
             <ExternalLink />
