@@ -5,7 +5,8 @@ import { auth } from "@/lib/auth";
 import { createTRPCContext } from "@openstatus/api";
 import { edgeRouter } from "@openstatus/api/src/edge";
 
-export const runtime = "edge";
+// Use Node.js runtime for self-hosted deployments (edge not needed)
+// export const runtime = "edge";
 
 const handler = (req: NextRequest) =>
   fetchRequestHandler({
