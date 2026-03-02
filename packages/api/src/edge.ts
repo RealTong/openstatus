@@ -1,7 +1,11 @@
+import { blobRouter } from "./router/blob";
 import { checkerRouter } from "./router/checker";
 import { domainRouter } from "./router/domain";
+import { feedbackRouter } from "./router/feedback";
 import { incidentRouter } from "./router/incident";
+import { invitationRouter } from "./router/invitation";
 import { maintenanceRouter } from "./router/maintenance";
+import { memberRouter } from "./router/member";
 import { monitorRouter } from "./router/monitor";
 import { monitorDataRouter } from "./router/monitorData";
 import { monitorTagRouter } from "./router/monitorTag";
@@ -34,4 +38,8 @@ export const edgeRouter = createTRPCRouter({
   statusPage: statusPageRouter,
   privateLocation: privateLocationRouter,
   domain: domainRouter,
+  invitation: invitationRouter,
+  feedback: feedbackRouter,
+  member: memberRouter,
+  blob: blobRouter,
 });

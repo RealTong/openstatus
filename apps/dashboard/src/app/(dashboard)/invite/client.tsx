@@ -9,7 +9,7 @@ import {
 } from "@/components/content/section";
 import { useTRPC } from "@/lib/trpc/client";
 import { Button } from "@openstatus/ui/components/ui/button";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { skipToken, useMutation, useQuery } from "@tanstack/react-query";
 import { isTRPCClientError } from "@trpc/client";
 import { useQueryStates } from "nuqs";
 import { useTransition } from "react";
@@ -21,7 +21,7 @@ export function Client() {
   const [isPending, startTransition] = useTransition();
   const [{ token }] = useQueryStates(searchParamsParsers);
   const { data: invitation, error } = useQuery({
-    ...trpc.invitation.get.queryOptions({ token }),
+    ...trpc.invitation.get.queryOptions(token ? { token } : skipToken),
     retry: false,
   });
   const acceptInvitationMutation = useMutation(

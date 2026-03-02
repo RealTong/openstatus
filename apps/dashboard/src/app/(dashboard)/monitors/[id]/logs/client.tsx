@@ -37,7 +37,11 @@ export function Client() {
     trpc.monitor.get.queryOptions({ id: Number.parseInt(id) }),
   );
   const { data: _logs, isLoading } = useQuery({
-    ...trpc.monitorData.list.queryOptions({ monitorId: id, from, to }),
+    ...trpc.monitorData.list.queryOptions({
+      monitorId: id,
+      from: from instanceof Date ? from.toISOString() : from,
+      to: to instanceof Date ? to.toISOString() : to,
+    }),
   });
   const { data: _log } = useQuery({
     ...trpc.monitorData.get.queryOptions({ id: selected, monitorId: id }),

@@ -15,6 +15,7 @@ import {
   subdomainSafeList,
 } from "@openstatus/db/src/schema";
 
+import { env } from "../env";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
 if (process.env.NODE_ENV === "test") {

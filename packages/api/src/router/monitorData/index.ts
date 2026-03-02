@@ -159,7 +159,7 @@ export const monitorDataRouter = createTRPCRouter({
 
       const data = rows.map((r) => ({
         ...r,
-        interval: r.interval * 1000, // convert to ms timestamp
+        interval: new Date(r.interval * 1000), // convert to Date
       }));
 
       return { data };
@@ -424,6 +424,10 @@ export const monitorDataRouter = createTRPCRouter({
           latencies: sql<string>`GROUP_CONCAT(${monitorResult.latency})`.as(
             "latencies",
           ),
+          lastTimestamp:
+            sql<number>`MAX(CAST(${monitorResult.createdAt} AS INTEGER))`.as(
+              "last_timestamp",
+            ),
         })
         .from(monitorResult)
         .where(
@@ -445,6 +449,7 @@ export const monitorDataRouter = createTRPCRouter({
           p95Latency: percentile(values, 95),
           p99Latency: percentile(values, 99),
           count: values.length,
+          lastTimestamp: (r.lastTimestamp ?? 0) * 1000,
         };
       });
 
@@ -707,11 +712,51 @@ async function computePercentiles(
   };
 }
 
+type BaseResponseLog = {
+  id: string;
+  url: string;
+  method: string;
+  statusCode: number;
+  requestStatus: "success" | "degraded" | "error";
+  latency: number;
+  timing: {
+    dns: number;
+    connect: number;
+    tls: number;
+    ttfb: number;
+    transfer: number;
+  };
+  assertions: unknown[] | string;
+  region: string;
+  error: boolean;
+  timestamp: number;
+  headers: Record<string, string>;
+  workspaceId: string;
+  monitorId: string;
+  cronTimestamp: number;
+  trigger: "cron" | "api";
+  message: string | null;
+  body: string | null;
+  uri: string | null;
+  // TCP-specific
+  errorMessage: string | null;
+  // DNS-specific
+  records: Record<string, string | string[]> | null;
+};
+
+export type ResponseLogEntry =
+  | (BaseResponseLog & { type: "http" })
+  | (BaseResponseLog & { type: "tcp" })
+  | (BaseResponseLog & { type: "dns" });
+
 /**
  * Maps a raw DB row to the response log shape expected by the Dashboard.
  * This matches the old Tinybird `list`/`get` response format.
+ * Returns a discriminated union so Extract<ResponseLog, { type: "http" }> works.
  */
-function mapResultToResponseLog(row: typeof monitorResult.$inferSelect) {
+function mapResultToResponseLog(
+  row: typeof monitorResult.$inferSelect,
+): ResponseLogEntry {
   const createdAtTs =
     row.createdAt instanceof Date
       ? row.createdAt.getTime()
@@ -741,5 +786,10 @@ function mapResultToResponseLog(row: typeof monitorResult.$inferSelect) {
     monitorId: row.monitorId.toString(),
     cronTimestamp: createdAtTs,
     trigger: (row.trigger ?? "cron") as "cron" | "api",
-  };
+    message: row.message ?? null,
+    body: null,
+    uri: null,
+    errorMessage: null,
+    records: null,
+  } as ResponseLogEntry;
 }

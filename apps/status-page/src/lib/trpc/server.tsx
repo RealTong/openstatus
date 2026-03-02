@@ -31,9 +31,9 @@ export const trpc = createTRPCOptionsProxy<AppRouter>({
         headers: {
           "x-trpc-source": "server",
         },
-        fetch: async (url, options) => {
+        fetch: (async (url, options) => {
           const cookieStore = await cookies();
-          return fetch(url, {
+          return fetch(url as string, {
             ...options,
             credentials: "include",
             headers: {
@@ -41,7 +41,7 @@ export const trpc = createTRPCOptionsProxy<AppRouter>({
               cookie: cookieStore.toString(),
             },
           });
-        },
+        }) as typeof fetch,
       }),
     ],
   }),

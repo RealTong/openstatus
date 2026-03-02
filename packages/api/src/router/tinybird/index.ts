@@ -130,7 +130,7 @@ export function getUptimeProcedure(_period: "7d" | "30d", _type: Type) {
 
     const data = rows.map((r) => ({
       ...r,
-      interval: r.interval * 1000,
+      interval: new Date(r.interval * 1000),
     }));
 
     return { data };

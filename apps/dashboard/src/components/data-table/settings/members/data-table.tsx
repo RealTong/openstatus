@@ -46,7 +46,9 @@ export function DataTable() {
             <TableCell>{item.user.email}</TableCell>
             <TableCell>{item.role}</TableCell>
             <TableCell>
-              {formatDate(item.user.createdAt ?? item.createdAt)}
+              {item.user.createdAt ?? item.createdAt
+                ? formatDate((item.user.createdAt ?? item.createdAt) as Date)
+                : "-"}
             </TableCell>
             <TableCell>
               <div className="flex justify-end">

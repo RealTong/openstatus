@@ -1,1 +1,1 @@
-export const workspaceRole = ["owner"] as const;
+export const workspaceRole = ["owner", "member"] as const;

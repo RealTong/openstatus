@@ -13,7 +13,6 @@ RUN \
     --mount=type=bind,target=bunfig.toml,source=bunfig.toml \
     --mount=type=bind,target=package.json,source=package.json \
     --mount=type=bind,target=apps/server/package.json,source=apps/server/package.json \
-    --mount=type=bind,target=packages/analytics/package.json,source=packages/analytics/package.json \
     --mount=type=bind,target=packages/db/package.json,source=packages/db/package.json \
     --mount=type=bind,target=packages/proto/package.json,source=packages/proto/package.json \
     --mount=type=bind,target=packages/emails/package.json,source=packages/emails/package.json \
@@ -32,9 +31,7 @@ RUN \
     --mount=type=bind,target=packages/notifications/webhook/package.json,source=packages/notifications/webhook/package.json \
     --mount=type=bind,target=packages/error/package.json,source=packages/error/package.json \
     --mount=type=bind,target=packages/regions/package.json,source=packages/regions/package.json \
-    --mount=type=bind,target=packages/tinybird/package.json,source=packages/tinybird/package.json \
     --mount=type=bind,target=packages/tracker/package.json,source=packages/tracker/package.json \
-    --mount=type=bind,target=packages/upstash/package.json,source=packages/upstash/package.json \
     --mount=type=bind,target=packages/utils/package.json,source=packages/utils/package.json \
     --mount=type=bind,target=packages/tsconfig/package.json,source=packages/tsconfig/package.json \
     --mount=type=bind,target=packages/assertions/package.json,source=packages/assertions/package.json \

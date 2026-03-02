@@ -6,6 +6,7 @@ import {
   DataTableSheetHeader,
   DataTableSheetTitle,
 } from "@/components/data-table/data-table-sheet";
+import type { ResponseLogEntry } from "@openstatus/api/src/router/monitorData";
 import type { RouterOutputs } from "@openstatus/api";
 import { DataTableBasics } from "./data-table-basics";
 
@@ -42,20 +43,41 @@ export function DataTableSheetTest({
   );
 }
 
-function mapping(data: TestTCP | TestHTTP | TestDNS, monitor: Monitor) {
+function mapping(
+  data: TestTCP | TestHTTP | TestDNS,
+  monitor: Monitor,
+): ResponseLogEntry | null {
+  const base = {
+    id: "",
+    trigger: "cron" as const,
+    workspaceId: String(monitor.workspaceId),
+    monitorId: String(monitor.id),
+    error: false,
+    message: null,
+    body: null,
+    uri: null,
+    errorMessage: null,
+    records: null,
+    requestStatus: "success" as const,
+    statusCode: 0,
+    url: monitor.url ?? "",
+    method: "",
+    headers: {} as Record<string, string>,
+    assertions: [] as unknown[],
+    timing: { dns: 0, connect: 0, tls: 0, ttfb: 0, transfer: 0 },
+  };
+
   switch (data.type) {
     case "http":
       return {
-        id: null,
-        trigger: null,
+        ...base,
+        type: "http",
         timestamp: data.timestamp,
         cronTimestamp: data.timestamp,
-        type: data.type,
-        requestStatus: "success",
-        statusCode: data.status,
-        headers: data.headers,
         region: data.region,
         latency: data.latency,
+        statusCode: data.status,
+        headers: data.headers as Record<string, string>,
         timing: {
           dns: data.timing.dnsDone - data.timing.dnsStart,
           connect: data.timing.connectDone - data.timing.connectStart,
@@ -63,48 +85,31 @@ function mapping(data: TestTCP | TestHTTP | TestDNS, monitor: Monitor) {
           ttfb: data.timing.firstByteDone - data.timing.firstByteStart,
           transfer: data.timing.transferDone - data.timing.transferStart,
         },
-        url: monitor.url,
-        workspaceId: String(monitor.workspaceId),
-        error: false,
-        monitorId: String(monitor.id),
-        assertions: monitor.assertions ?? null,
-        message: null,
+        assertions: monitor.assertions ?? [],
         body: data.body ?? null,
-      } as const;
+      };
     case "tcp":
       return {
-        id: null,
-        trigger: null,
+        ...base,
+        type: "tcp",
         timestamp: data.timestamp,
         cronTimestamp: data.timestamp,
         region: data.region,
-        type: data.type,
-        requestStatus: "success",
-        error: false,
         latency: data.latency ?? 0,
-        uri: monitor.url,
-        monitorId: String(monitor.id),
+        uri: monitor.url ?? null,
         errorMessage: null,
-        assertions: null,
-      } as const;
-    // FIXM: add DNS props
+      };
     case "dns":
       return {
-        id: null,
-        trigger: null,
+        ...base,
+        type: "dns",
         timestamp: data.timestamp,
         cronTimestamp: data.timestamp,
         region: data.region,
-        type: data.type,
-        requestStatus: "success",
-        monitorId: String(monitor.id),
-        error: false,
-        uri: monitor.url,
         latency: data.latency ?? 0,
-        records: data.records,
-        errorMessage: null,
-        assertions: null,
-      } as const;
+        uri: monitor.url ?? null,
+        records: (data.records as Record<string, string | string[]>) ?? null,
+      };
     default:
       return null;
   }

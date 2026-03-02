@@ -1,4 +1,4 @@
-FROM golang:1.26-alpine as builder
+FROM golang:1.26-alpine AS builder
 
 WORKDIR /go/src/app
 COPY ca/ca-bundle.crt /usr/local/share/ca-certificates/ca-bundle.crt
@@ -31,7 +31,7 @@ COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certifi
 
 COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 
-COPY --from=builder /go/src/app/checker/main /opt/bin/checker
+COPY --from=builder /go/src/app/checker /opt/bin/checker
 
 ENV TZ=UTC
 ENV USER=1000

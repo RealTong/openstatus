@@ -1,5 +1,6 @@
 import type { DefaultSession } from "next-auth";
 import NextAuth from "next-auth";
+import type { Provider } from "next-auth/providers";
 
 import { db, eq } from "@openstatus/db";
 import { user } from "@openstatus/db/src/schema";
@@ -15,8 +16,8 @@ import {
 
 export type { DefaultSession };
 
-function buildProviders() {
-  const providers =
+function buildProviders(): Provider[] {
+  const providers: Provider[] =
     process.env.NODE_ENV === "development" || process.env.SELF_HOST === "true"
       ? [GitHubProvider, GoogleProvider, ResendProvider]
       : [GitHubProvider, GoogleProvider];

@@ -7,7 +7,6 @@ on:
     paths:
       - "apps/server/**"
       - "apps/dashboard/**"
-      - "apps/workflows/**"
       - "apps/private-location/**"
       - "apps/status-page/**"
       - "apps/checker/**"
@@ -18,7 +17,7 @@ on:
       services:
         description: 'Services to build (comma-separated)'
         required: false
-        default: 'server,dashboard,workflows,private-location,status-page,checker'
+        default: 'server,dashboard,private-location,status-page,checker'
         type: string
 
 concurrency:
@@ -53,9 +52,9 @@ jobs:
 
             # packages/** changes affect all services
             if echo "$CHANGED" | grep -q '^packages/'; then
-              SERVICES_LIST=("server" "dashboard" "workflows" "private-location" "status-page" "checker")
+              SERVICES_LIST=("server" "dashboard" "private-location" "status-page" "checker")
             else
-              for svc in server dashboard workflows private-location status-page checker; do
+              for svc in server dashboard private-location status-page checker; do
                 if echo "$CHANGED" | grep -q "^apps/$svc/"; then
                   SERVICES_LIST+=("$svc")
                 fi
@@ -89,9 +88,6 @@ jobs:
           - service: dashboard
             context: .
             dockerfile: apps/dashboard/Dockerfile
-          - service: workflows
-            context: .
-            dockerfile: apps/workflows/Dockerfile
           - service: private-location
             context: apps/private-location
             dockerfile: apps/private-location/Dockerfile
