@@ -78,8 +78,7 @@ Made with [Contrib.rocks](https://contrib.rocks)
 - [Next.js](https://nextjs.org/)
 - [Tailwind CSS](https://tailwindcss.com/)
 - [shadcn/ui](https://ui.shadcn.com/)
-- [tinybird](https://tinybird.co/?ref=openstatus.dev)
-- [turso](https://turso.tech/)
+- [turso](https://turso.tech/) / libSQL (SQLite)
 - [drizzle](https://orm.drizzle.team/)
 - [Resend](https://resend.com/)
 
@@ -93,7 +92,6 @@ We provide pre-built Docker images for easy deployment with Coolify:
 # Example Coolify configuration
 ghcr.io/openstatusHQ/openstatus-server:latest
 ghcr.io/openstatusHQ/openstatus-dashboard:latest
-ghcr.io/openstatusHQ/openstatus-workflows:latest
 ghcr.io/openstatusHQ/openstatus-private-location:latest
 ghcr.io/openstatusHQ/openstatus-status-page:latest
 ghcr.io/openstatusHQ/openstatus-checker:latest
