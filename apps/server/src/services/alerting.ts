@@ -34,7 +34,7 @@ const providerMap: Record<
 > = {
   discord: () => import("@openstatus/notification-discord"),
   slack: () => import("@openstatus/notification-slack"),
-  email: () => import("@openstatus/notification-email"),
+  email: () => import("@openstatus/notification-emails"),
   webhook: () => import("@openstatus/notification-webhook"),
   telegram: () => import("@openstatus/notification-telegram"),
   "google-chat": () => import("@openstatus/notification-google-chat"),

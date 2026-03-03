@@ -21,6 +21,7 @@
     "@hono/zod-validator": "0.7.6",
     "@logtape/logtape": "2.0.1",
     "@openstatus/notification-discord": "workspace:*",
+    "@openstatus/notification-emails": "workspace:*",
     "@openstatus/notification-google-chat": "workspace:*",
     "@openstatus/notification-grafana-oncall": "workspace:*",
     "@openstatus/notification-ntfy": "workspace:*",

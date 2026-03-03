@@ -1,3 +1,11 @@
+
+> This project features customizations for OpenStatus:
+- OIDC support
+- Paywall removal
+- Bug fixes
+- Multi-tenancy removal
+- Docker support
+
 <p align="center" style="margin-top: 120px">
 
   <h3 align="center">OpenStatus</h3>
