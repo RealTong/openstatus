@@ -23,8 +23,7 @@ RUN \
     --mount=type=bind,target=packages/notifications/google-chat/package.json,source=packages/notifications/google-chat/package.json \
     --mount=type=bind,target=packages/notifications/ntfy/package.json,source=packages/notifications/ntfy/package.json \
     --mount=type=bind,target=packages/notifications/opsgenie/package.json,source=packages/notifications/opsgenie/package.json \
-    --mount=type=bind,target=packages/notifications/pagerduty/package.json,source=packages/notifications/pagerduty/package.json \
-    --mount=type=bind,target=packages/notifications/slack/package.json,source=packages/notifications/slack/package.json \
+--mount=type=bind,target=packages/notifications/slack/package.json,source=packages/notifications/slack/package.json \
     --mount=type=bind,target=packages/notifications/telegram/package.json,source=packages/notifications/telegram/package.json \
     --mount=type=bind,target=packages/notifications/twillio-whatsapp/package.json,source=packages/notifications/twillio-whatsapp/package.json \
     --mount=type=bind,target=packages/notifications/twillio-sms/package.json,source=packages/notifications/twillio-sms/package.json \
